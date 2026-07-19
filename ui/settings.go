@@ -5,8 +5,11 @@ import (
 	"image/color"
 
 	"gioui.org/font"
+	"gioui.org/gesture"
 	"gioui.org/io/key"
+	"gioui.org/io/pointer"
 	"gioui.org/layout"
+	"gioui.org/op/clip"
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
@@ -27,7 +30,7 @@ type SettingsPane struct {
 
 	targetLangBtns [4]widget.Clickable
 
-	bgClick  widget.Clickable
+	bgClick  gesture.Click
 	saveBtn  widget.Clickable
 	closeBtn widget.Clickable
 
@@ -66,19 +69,27 @@ func NewSettingsPane(cfg *config.Config, onSave func(*config.Config), onClose fu
 }
 
 func (s *SettingsPane) HandleActions(gtx layout.Context) {
-	if s.bgClick.Clicked(gtx) {
-		gtx.Execute(key.FocusCmd{})
+	for {
+		ev, ok := s.bgClick.Update(gtx.Source)
+		if !ok {
+			break
+		}
+		if ev.Kind == gesture.KindPress {
+			gtx.Execute(key.FocusCmd{})
+		}
 	}
 	for i := range s.translatorBtns {
 		if s.translatorBtns[i].Clicked(gtx) {
 			s.translatorIdx = i
 			s.saved = false
+			gtx.Execute(key.FocusCmd{})
 		}
 	}
 	for i := range s.targetLangBtns {
 		if s.targetLangBtns[i].Clicked(gtx) {
 			s.targetLangEditor.SetText(languages[i])
 			s.saved = false
+			gtx.Execute(key.FocusCmd{})
 		}
 	}
 
@@ -101,60 +112,65 @@ func (s *SettingsPane) HandleActions(gtx layout.Context) {
 }
 
 func (s *SettingsPane) Layout(gtx layout.Context, th *material.Theme) layout.Dimensions {
-	return s.bgClick.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-		return layout.Background{}.Layout(gtx,
-			func(gtx layout.Context) layout.Dimensions {
-				fillRect(gtx, colorBg, gtx.Constraints.Max)
-				return layout.Dimensions{Size: gtx.Constraints.Max}
-			},
-			func(gtx layout.Context) layout.Dimensions {
-			return layout.Inset{
-				Top: unit.Dp(16), Bottom: unit.Dp(16),
-				Left: unit.Dp(24), Right: unit.Dp(24),
-			}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-						return s.layoutHeader(gtx, th)
-					}),
-					layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
-						return material.List(th, &s.list).Layout(gtx, 1, func(gtx layout.Context, _ int) layout.Dimensions {
-							return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-								layout.Rigid(layout.Spacer{Height: unit.Dp(20)}.Layout),
-								layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-									return s.layoutField(gtx, th, "Client.txt Path", &s.logPathEditor, "C:\\path\\to\\Client.txt")
-								}),
-								layout.Rigid(layout.Spacer{Height: unit.Dp(16)}.Layout),
-								layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-									return s.layoutTranslatorSelect(gtx, th)
-								}),
-								layout.Rigid(layout.Spacer{Height: unit.Dp(16)}.Layout),
-								layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-									return s.layoutField(gtx, th, "DeepL API Key", &s.deeplKeyEditor, "")
-								}),
-								layout.Rigid(layout.Spacer{Height: unit.Dp(12)}.Layout),
-								layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-									return s.layoutField(gtx, th, "Gemini API Key", &s.geminiKeyEditor, "")
-								}),
-								layout.Rigid(layout.Spacer{Height: unit.Dp(16)}.Layout),
-								layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-									return s.layoutLangRow(gtx, th)
-								}),
-								layout.Rigid(layout.Spacer{Height: unit.Dp(16)}.Layout),
-								layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-									return s.layoutHotkeyField(gtx, th)
-								}),
-								layout.Rigid(layout.Spacer{Height: unit.Dp(24)}.Layout),
-								layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-									return s.layoutFooter(gtx, th)
-								}),
-							)
-						})
-					}),
-				)
-			})
-		},
-	)
+	size := gtx.Constraints.Max
+	fillRect(gtx, colorBg, size)
+
+	_ = layout.Inset{
+		Top: unit.Dp(16), Bottom: unit.Dp(16),
+		Left: unit.Dp(24), Right: unit.Dp(24),
+	}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+				return s.layoutHeader(gtx, th)
+			}),
+			layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
+				return material.List(th, &s.list).Layout(gtx, 1, func(gtx layout.Context, _ int) layout.Dimensions {
+					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+						layout.Rigid(layout.Spacer{Height: unit.Dp(20)}.Layout),
+						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+							return s.layoutField(gtx, th, "Client.txt Path", &s.logPathEditor, "C:\\path\\to\\Client.txt")
+						}),
+						layout.Rigid(layout.Spacer{Height: unit.Dp(16)}.Layout),
+						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+							return s.layoutTranslatorSelect(gtx, th)
+						}),
+						layout.Rigid(layout.Spacer{Height: unit.Dp(16)}.Layout),
+						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+							return s.layoutField(gtx, th, "DeepL API Key", &s.deeplKeyEditor, "")
+						}),
+						layout.Rigid(layout.Spacer{Height: unit.Dp(12)}.Layout),
+						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+							return s.layoutField(gtx, th, "Gemini API Key", &s.geminiKeyEditor, "")
+						}),
+						layout.Rigid(layout.Spacer{Height: unit.Dp(16)}.Layout),
+						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+							return s.layoutLangRow(gtx, th)
+						}),
+						layout.Rigid(layout.Spacer{Height: unit.Dp(16)}.Layout),
+						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+							return s.layoutHotkeyField(gtx, th)
+						}),
+						layout.Rigid(layout.Spacer{Height: unit.Dp(24)}.Layout),
+						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+							return s.layoutFooter(gtx, th)
+						}),
+					)
+				})
+			}),
+		)
 	})
+
+	// PassOp overlay on top: detects clicks everywhere but passes them
+	// through so editors and buttons below still work normally.
+	// When an editor is clicked, its FocusCmd (issued during Layout)
+	// overrides our unfocus FocusCmd (issued in HandleActions).
+	area := clip.Rect{Max: size}.Push(gtx.Ops)
+	pass := pointer.PassOp{}.Push(gtx.Ops)
+	s.bgClick.Add(gtx.Ops)
+	pass.Pop()
+	area.Pop()
+
+	return layout.Dimensions{Size: size}
 }
 
 func (s *SettingsPane) layoutHeader(gtx layout.Context, th *material.Theme) layout.Dimensions {

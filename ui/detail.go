@@ -6,6 +6,9 @@ import (
 	"image/color"
 
 	"gioui.org/font"
+	"gioui.org/gesture"
+	"gioui.org/io/key"
+	"gioui.org/io/pointer"
 	"gioui.org/layout"
 	"gioui.org/op/clip"
 	"gioui.org/op/paint"
@@ -32,7 +35,7 @@ type DetailPane struct {
 	translateMsgBtn  widget.Clickable
 	translateOutBtn  widget.Clickable
 	copyBtn          widget.Clickable
-	bgClick          widget.Clickable
+	bgClick          gesture.Click
 	replyEditor      widget.Editor
 	selBody          widget.Selectable
 	selTranslated    widget.Selectable
@@ -121,47 +124,56 @@ func (d *DetailPane) SwitchMessage(msg *chat.Message) {
 }
 
 func (d *DetailPane) Layout(gtx layout.Context, th *material.Theme, msg *chat.Message) layout.Dimensions {
-	if d.bgClick.Clicked(gtx) {
-		d.selBody.SetCaret(0, 0)
-		d.selTranslated.SetCaret(0, 0)
-		d.selTranslatedOut.SetCaret(0, 0)
+	for {
+		ev, ok := d.bgClick.Update(gtx.Source)
+		if !ok {
+			break
+		}
+		if ev.Kind == gesture.KindPress {
+			d.selBody.SetCaret(0, 0)
+			d.selTranslated.SetCaret(0, 0)
+			d.selTranslatedOut.SetCaret(0, 0)
+			gtx.Execute(key.FocusCmd{})
+		}
 	}
-	return layout.Background{}.Layout(gtx,
-		func(gtx layout.Context) layout.Dimensions {
-			fillRect(gtx, colorSurface, gtx.Constraints.Max)
-			return layout.Dimensions{Size: gtx.Constraints.Max}
-		},
-		func(gtx layout.Context) layout.Dimensions {
-			return d.bgClick.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-				return layout.Inset{
-					Top: unit.Dp(12), Bottom: unit.Dp(12),
-					Left: unit.Dp(16), Right: unit.Dp(16),
-				}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-						return d.layoutHeader(gtx, th, msg)
-					}),
-					layout.Rigid(layout.Spacer{Height: unit.Dp(12)}.Layout),
-					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-						return d.layoutOriginal(gtx, th, msg)
-					}),
-					layout.Rigid(layout.Spacer{Height: unit.Dp(8)}.Layout),
-					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-						return d.layoutMsgTranslateRow(gtx, th)
-					}),
-					layout.Rigid(layout.Spacer{Height: unit.Dp(16)}.Layout),
-					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-						return d.layoutDivider(gtx)
-					}),
-					layout.Rigid(layout.Spacer{Height: unit.Dp(12)}.Layout),
-					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-						return d.layoutReplySection(gtx, th)
-					}),
-				)
-				})
-			})
-		},
-	)
+
+	size := gtx.Constraints.Max
+	fillRect(gtx, colorSurface, size)
+
+	_ = layout.Inset{
+		Top: unit.Dp(12), Bottom: unit.Dp(12),
+		Left: unit.Dp(16), Right: unit.Dp(16),
+	}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+				return d.layoutHeader(gtx, th, msg)
+			}),
+			layout.Rigid(layout.Spacer{Height: unit.Dp(12)}.Layout),
+			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+				return d.layoutOriginal(gtx, th, msg)
+			}),
+			layout.Rigid(layout.Spacer{Height: unit.Dp(8)}.Layout),
+			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+				return d.layoutMsgTranslateRow(gtx, th)
+			}),
+			layout.Rigid(layout.Spacer{Height: unit.Dp(16)}.Layout),
+			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+				return d.layoutDivider(gtx)
+			}),
+			layout.Rigid(layout.Spacer{Height: unit.Dp(12)}.Layout),
+			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+				return d.layoutReplySection(gtx, th)
+			}),
+		)
+	})
+
+	area := clip.Rect{Max: size}.Push(gtx.Ops)
+	pass := pointer.PassOp{}.Push(gtx.Ops)
+	d.bgClick.Add(gtx.Ops)
+	pass.Pop()
+	area.Pop()
+
+	return layout.Dimensions{Size: size}
 }
 
 func (d *DetailPane) layoutHeader(gtx layout.Context, th *material.Theme, msg *chat.Message) layout.Dimensions {
