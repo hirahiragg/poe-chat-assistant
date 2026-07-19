@@ -20,6 +20,7 @@ type Config struct {
 	DeepLKey   string         `json:"deepl_api_key,omitempty"`
 	GeminiKey  string         `json:"gemini_api_key,omitempty"`
 	TargetLang string         `json:"target_language"`
+	Hotkey     string         `json:"hotkey,omitempty"`
 	Filters    ChannelFilters `json:"channel_filters,omitempty"`
 }
 

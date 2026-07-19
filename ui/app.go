@@ -5,6 +5,8 @@ import (
 	"io"
 	"strings"
 
+	"sync/atomic"
+
 	"gioui.org/app"
 	"gioui.org/io/clipboard"
 	"gioui.org/io/key"
@@ -47,6 +49,8 @@ type App struct {
 	onLoadMore   func() LoadMoreResult
 	loading      bool
 	loadResult   LoadMoreResult
+	hidden       atomic.Bool
+	toggleReq    atomic.Bool
 }
 
 func NewApp(store *chat.Store, cfg *config.Config, translateFn TranslateFunc, onConfigSave func(*config.Config), onLoadMore func() LoadMoreResult) *App {
@@ -74,6 +78,11 @@ func (a *App) SetTranslateFunc(fn TranslateFunc) {
 	a.translate = fn
 }
 
+func (a *App) RequestToggle() {
+	a.toggleReq.Store(true)
+	a.window.Invalidate()
+}
+
 func (a *App) Run() error {
 	var ops op.Ops
 
@@ -82,6 +91,16 @@ func (a *App) Run() error {
 		case app.DestroyEvent:
 			return e.Err
 		case app.FrameEvent:
+			if a.toggleReq.CompareAndSwap(true, false) {
+				if a.hidden.Load() {
+					a.hidden.Store(false)
+					a.window.Option(app.Windowed.Option())
+					a.window.Perform(system.ActionRaise)
+				} else {
+					a.hidden.Store(true)
+					a.window.Perform(system.ActionMinimize)
+				}
+			}
 			gtx := app.NewContext(&ops, e)
 			a.handleKeys(gtx)
 			if a.showSettings {

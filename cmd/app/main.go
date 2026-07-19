@@ -15,6 +15,7 @@ import (
 
 	"github.com/hirahiragg/poe-chat-assistant/internal/chat"
 	"github.com/hirahiragg/poe-chat-assistant/internal/config"
+	"github.com/hirahiragg/poe-chat-assistant/internal/hotkey"
 	"github.com/hirahiragg/poe-chat-assistant/internal/logwatcher"
 	"github.com/hirahiragg/poe-chat-assistant/internal/translation"
 	"github.com/hirahiragg/poe-chat-assistant/ui"
@@ -209,6 +210,10 @@ func runUI(flagLogPath, flagTranslator, flagAPIKey string) {
 		}()
 	}
 
+	var application *ui.App
+
+	hkManager := hotkey.NewManager("Path of Exile")
+
 	onConfigSave := func(newCfg *config.Config) {
 		if err := newCfg.Save(); err != nil {
 			log.Printf("config save error: %v", err)
@@ -218,10 +223,15 @@ func runUI(flagLogPath, flagTranslator, flagAPIKey string) {
 		svc = translation.NewService(newTranslator(newCfg.Translator, newCfg.APIKey()))
 		mu.Unlock()
 
+		hkManager.Update(newCfg.Hotkey, func() { application.RequestToggle() })
 		cfg = newCfg
 	}
 
-	application := ui.NewApp(store, cfg, translateFn, onConfigSave, loadMore)
+	application = ui.NewApp(store, cfg, translateFn, onConfigSave, loadMore)
+
+	hkManager.Update(cfg.Hotkey, func() { application.RequestToggle() })
+	hkManager.Start()
+	defer hkManager.Stop()
 
 	startWatcher(cfg.LogPath, application)
 

@@ -15,11 +15,12 @@ import (
 )
 
 type SettingsPane struct {
-	list            widget.List
-	logPathEditor   widget.Editor
-	deeplKeyEditor  widget.Editor
-	geminiKeyEditor widget.Editor
+	list             widget.List
+	logPathEditor    widget.Editor
+	deeplKeyEditor   widget.Editor
+	geminiKeyEditor  widget.Editor
 	targetLangEditor widget.Editor
+	hotkeyEditor     widget.Editor
 
 	translatorBtns [3]widget.Clickable
 	translatorIdx  int
@@ -52,6 +53,8 @@ func NewSettingsPane(cfg *config.Config, onSave func(*config.Config), onClose fu
 	s.geminiKeyEditor.SetText(cfg.GeminiKey)
 	s.targetLangEditor.SingleLine = true
 	s.targetLangEditor.SetText(cfg.TargetLang)
+	s.hotkeyEditor.SingleLine = true
+	s.hotkeyEditor.SetText(cfg.Hotkey)
 
 	for i, t := range translators {
 		if t == cfg.Translator {
@@ -86,6 +89,7 @@ func (s *SettingsPane) HandleActions(gtx layout.Context) {
 			DeepLKey:   s.deeplKeyEditor.Text(),
 			GeminiKey:  s.geminiKeyEditor.Text(),
 			TargetLang: s.targetLangEditor.Text(),
+			Hotkey:     s.hotkeyEditor.Text(),
 		}
 		s.onSave(cfg)
 		s.saved = true
@@ -134,6 +138,10 @@ func (s *SettingsPane) Layout(gtx layout.Context, th *material.Theme) layout.Dim
 								layout.Rigid(layout.Spacer{Height: unit.Dp(16)}.Layout),
 								layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 									return s.layoutLangRow(gtx, th)
+								}),
+								layout.Rigid(layout.Spacer{Height: unit.Dp(16)}.Layout),
+								layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+									return s.layoutHotkeyField(gtx, th)
 								}),
 								layout.Rigid(layout.Spacer{Height: unit.Dp(24)}.Layout),
 								layout.Rigid(func(gtx layout.Context) layout.Dimensions {
@@ -259,6 +267,21 @@ func (s *SettingsPane) layoutLangSection(gtx layout.Context, th *material.Theme,
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 			gtx.Constraints.Max.X = gtx.Dp(unit.Dp(120))
 			return s.layoutEditorBox(gtx, th, editor, "e.g. fr, de, pt")
+		}),
+	)
+}
+
+func (s *SettingsPane) layoutHotkeyField(gtx layout.Context, th *material.Theme) layout.Dimensions {
+	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+			lbl := material.Label(th, unit.Sp(12), "Toggle Hotkey")
+			lbl.Color = colorTextDim
+			return lbl.Layout(gtx)
+		}),
+		layout.Rigid(layout.Spacer{Height: unit.Dp(4)}.Layout),
+		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+			gtx.Constraints.Max.X = gtx.Dp(unit.Dp(200))
+			return s.layoutEditorBox(gtx, th, &s.hotkeyEditor, "e.g. ctrl+shift+space")
 		}),
 	)
 }
