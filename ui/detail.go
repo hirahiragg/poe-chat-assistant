@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"fmt"
 	"image"
 	"image/color"
 
@@ -15,19 +16,35 @@ import (
 	"github.com/hirahiragg/poe-chat-assistant/internal/chat"
 )
 
+type msgState struct {
+	translatedMsg  string
+	translatedOut  string
+	replyText      string
+	translatingMsg bool
+	translatingOut bool
+}
+
+func msgKey(msg *chat.Message) string {
+	return fmt.Sprintf("%d|%d|%s|%s", msg.Timestamp.UnixNano(), msg.Channel, msg.Player, msg.Body)
+}
+
 type DetailPane struct {
-	replyEditor      widget.Editor
 	translateMsgBtn  widget.Clickable
 	translateOutBtn  widget.Clickable
 	copyBtn          widget.Clickable
-	translatedMsg    string
-	translatedOut    string
-	translatingMsg   bool
-	translatingOut   bool
+	bgClick          widget.Clickable
+	replyEditor      widget.Editor
+	selBody          widget.Selectable
+	selTranslated    widget.Selectable
+	selTranslatedOut widget.Selectable
+	cache            map[string]*msgState
+	currentKey       string
 }
 
 func NewDetailPane() *DetailPane {
-	d := &DetailPane{}
+	d := &DetailPane{
+		cache: make(map[string]*msgState),
+	}
 	d.replyEditor.SingleLine = true
 	d.replyEditor.Submit = true
 	return d
@@ -50,50 +67,77 @@ func (d *DetailPane) ReplyText() string {
 }
 
 func (d *DetailPane) SetTranslatedMsg(s string) {
-	d.translatedMsg = s
-	d.translatingMsg = false
+	st := d.current()
+	st.translatedMsg = s
+	st.translatingMsg = false
 }
 
 func (d *DetailPane) SetTranslatedOut(s string) {
-	d.translatedOut = s
-	d.translatingOut = false
+	st := d.current()
+	st.translatedOut = s
+	st.translatingOut = false
 }
 
 func (d *DetailPane) SetTranslatingMsg(b bool) {
-	d.translatingMsg = b
+	st := d.current()
+	st.translatingMsg = b
+	if b {
+		st.translatedMsg = ""
+	}
 }
 
 func (d *DetailPane) SetTranslatingOut(b bool) {
-	d.translatingOut = b
+	d.current().translatingOut = b
 }
 
 func (d *DetailPane) TranslatedOut() string {
-	return d.translatedOut
+	return d.current().translatedOut
 }
 
-func (d *DetailPane) ClearReply() {
-	d.replyEditor.SetText("")
-	d.translatedOut = ""
-	d.translatingOut = false
+func (d *DetailPane) current() *msgState {
+	st, ok := d.cache[d.currentKey]
+	if !ok {
+		st = &msgState{}
+		d.cache[d.currentKey] = st
+	}
+	return st
 }
 
-func (d *DetailPane) ClearTranslation() {
-	d.translatedMsg = ""
-	d.translatingMsg = false
+func (d *DetailPane) SwitchMessage(msg *chat.Message) {
+	if d.currentKey != "" {
+		if st, ok := d.cache[d.currentKey]; ok {
+			st.replyText = d.replyEditor.Text()
+		}
+	}
+
+	key := msgKey(msg)
+	d.currentKey = key
+	st := d.current()
+
+	d.replyEditor.SetText(st.replyText)
+	d.selBody = widget.Selectable{}
+	d.selTranslated = widget.Selectable{}
+	d.selTranslatedOut = widget.Selectable{}
 }
 
 func (d *DetailPane) Layout(gtx layout.Context, th *material.Theme, msg *chat.Message) layout.Dimensions {
+	if d.bgClick.Clicked(gtx) {
+		d.selBody.SetCaret(0, 0)
+		d.selTranslated.SetCaret(0, 0)
+		d.selTranslatedOut.SetCaret(0, 0)
+	}
 	return layout.Background{}.Layout(gtx,
 		func(gtx layout.Context) layout.Dimensions {
 			fillRect(gtx, colorSurface, gtx.Constraints.Max)
 			return layout.Dimensions{Size: gtx.Constraints.Max}
 		},
 		func(gtx layout.Context) layout.Dimensions {
-			return layout.Inset{
-				Top: unit.Dp(12), Bottom: unit.Dp(12),
-				Left: unit.Dp(16), Right: unit.Dp(16),
-			}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			return d.bgClick.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+				return layout.Inset{
+					Top: unit.Dp(12), Bottom: unit.Dp(12),
+					Left: unit.Dp(16), Right: unit.Dp(16),
+				}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 						return d.layoutHeader(gtx, th, msg)
 					}),
@@ -114,6 +158,7 @@ func (d *DetailPane) Layout(gtx layout.Context, th *material.Theme, msg *chat.Me
 						return d.layoutReplySection(gtx, th)
 					}),
 				)
+				})
 			})
 		},
 	)
@@ -124,7 +169,7 @@ func (d *DetailPane) layoutHeader(gtx layout.Context, th *material.Theme, msg *c
 		layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
 			return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-					lbl := material.Label(th, unit.Sp(12), msg.Channel.String())
+					lbl := material.Label(th, unit.Sp(12), msg.Channel.Symbol())
 					lbl.Color = channelColor(msg.Channel)
 					lbl.Font.Weight = font.Bold
 					return layout.Inset{Right: unit.Dp(8)}.Layout(gtx, lbl.Layout)
@@ -146,26 +191,43 @@ func (d *DetailPane) layoutHeader(gtx layout.Context, th *material.Theme, msg *c
 }
 
 func (d *DetailPane) layoutOriginal(gtx layout.Context, th *material.Theme, msg *chat.Message) layout.Dimensions {
+	d.selBody.SetText(msg.Body)
 	lbl := material.Label(th, unit.Sp(14), msg.Body)
 	lbl.Color = colorText
+	lbl.State = &d.selBody
 	return lbl.Layout(gtx)
 }
 
 func (d *DetailPane) layoutMsgTranslateRow(gtx layout.Context, th *material.Theme) layout.Dimensions {
-	if d.translatedMsg != "" {
+	st := d.current()
+	if st.translatedMsg != "" {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-				lbl := material.Label(th, unit.Sp(14), d.translatedMsg)
+				d.selTranslated.SetText(st.translatedMsg)
+				lbl := material.Label(th, unit.Sp(14), st.translatedMsg)
 				lbl.Color = colorTranslated
+				lbl.State = &d.selTranslated
 				return lbl.Layout(gtx)
+			}),
+			layout.Rigid(layout.Spacer{Height: unit.Dp(6)}.Layout),
+			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+				label := "Re-translate"
+				if st.translatingMsg {
+					label = "..."
+				}
+				return layout.Flex{Spacing: layout.SpaceStart}.Layout(gtx,
+					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+						return layoutButton(gtx, th, &d.translateMsgBtn, label, colorBtnBg)
+					}),
+				)
 			}),
 		)
 	}
 	label := "Translate"
-	if d.translatingMsg {
+	if st.translatingMsg {
 		label = "..."
 	}
-	return layout.Flex{}.Layout(gtx,
+	return layout.Flex{Spacing: layout.SpaceStart}.Layout(gtx,
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 			return layoutButton(gtx, th, &d.translateMsgBtn, label, colorBtnBg)
 		}),
@@ -196,7 +258,8 @@ func (d *DetailPane) layoutReplySection(gtx layout.Context, th *material.Theme) 
 			return d.layoutButtons(gtx, th)
 		}),
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			if d.translatedOut == "" {
+			st := d.current()
+			if st.translatedOut == "" {
 				return layout.Dimensions{}
 			}
 			return layout.Inset{Top: unit.Dp(10)}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
@@ -208,10 +271,20 @@ func (d *DetailPane) layoutReplySection(gtx layout.Context, th *material.Theme) 
 					}),
 					layout.Rigid(layout.Spacer{Height: unit.Dp(4)}.Layout),
 					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-						lbl := material.Label(th, unit.Sp(14), d.translatedOut)
+						d.selTranslatedOut.SetText(st.translatedOut)
+						lbl := material.Label(th, unit.Sp(14), st.translatedOut)
 						lbl.Color = colorAccent
 						lbl.Font.Weight = font.Medium
+						lbl.State = &d.selTranslatedOut
 						return lbl.Layout(gtx)
+					}),
+					layout.Rigid(layout.Spacer{Height: unit.Dp(6)}.Layout),
+					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+						return layout.Flex{Spacing: layout.SpaceStart}.Layout(gtx,
+							layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+								return layoutButton(gtx, th, &d.copyBtn, "Copy", colorBtnBg)
+							}),
+						)
 					}),
 				)
 			})
@@ -227,7 +300,7 @@ func (d *DetailPane) layoutEditorBox(gtx layout.Context, th *material.Theme) lay
 		},
 		func(gtx layout.Context) layout.Dimensions {
 			return layout.Inset{
-				Top: unit.Dp(8), Bottom: unit.Dp(8),
+				Top: unit.Dp(10), Bottom: unit.Dp(6),
 				Left: unit.Dp(10), Right: unit.Dp(10),
 			}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 				ed := material.Editor(th, &d.replyEditor, "Type in Japanese...")
@@ -243,17 +316,10 @@ func (d *DetailPane) layoutButtons(gtx layout.Context, th *material.Theme) layou
 	return layout.Flex{Spacing: layout.SpaceStart}.Layout(gtx,
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 			label := "Translate"
-			if d.translatingOut {
+			if d.current().translatingOut {
 				label = "..."
 			}
 			return layoutButton(gtx, th, &d.translateOutBtn, label, colorBtnBg)
-		}),
-		layout.Rigid(layout.Spacer{Width: unit.Dp(8)}.Layout),
-		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			if d.translatedOut == "" {
-				return layout.Dimensions{}
-			}
-			return layoutButton(gtx, th, &d.copyBtn, "Copy", colorAccent)
 		}),
 	)
 }
@@ -262,12 +328,12 @@ func layoutButton(gtx layout.Context, th *material.Theme, btn *widget.Clickable,
 	b := material.Button(th, btn, label)
 	b.Background = bg
 	b.Color = colorBtnText
-	b.CornerRadius = unit.Dp(4)
-	b.TextSize = unit.Sp(13)
+	b.CornerRadius = unit.Dp(3)
+	b.TextSize = unit.Sp(11)
 	b.Font.Weight = font.Medium
 	b.Inset = layout.Inset{
-		Top: unit.Dp(9), Bottom: unit.Dp(3),
-		Left: unit.Dp(16), Right: unit.Dp(16),
+		Top: unit.Dp(6), Bottom: unit.Dp(2),
+		Left: unit.Dp(10), Right: unit.Dp(10),
 	}
 	return b.Layout(gtx)
 }

@@ -14,8 +14,13 @@ func NewService(translator Translator) *Service {
 	}
 }
 
+func (s *Service) SetTranslator(t Translator) {
+	s.translator = t
+	s.cache = NewCache()
+}
+
 func (s *Service) Translate(ctx context.Context, req Request) (string, error) {
-	if cached, ok := s.cache.Get(req.Direction, req.Message, req.Context); ok {
+	if cached, ok := s.cache.Get(req); ok {
 		return cached, nil
 	}
 
@@ -24,6 +29,6 @@ func (s *Service) Translate(ctx context.Context, req Request) (string, error) {
 		return "", err
 	}
 
-	s.cache.Set(req.Direction, req.Message, req.Context, result)
+	s.cache.Set(req, result)
 	return result, nil
 }

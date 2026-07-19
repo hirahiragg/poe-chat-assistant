@@ -29,14 +29,13 @@ func NewDeepL(apiKey string) *DeepLTranslator {
 }
 
 func (d *DeepLTranslator) Translate(ctx context.Context, req Request) (string, error) {
-	sl, tl := "EN", "JA"
+	tl := strings.ToUpper(req.TargetLang)
 	if req.Direction == Outbound {
-		sl, tl = "JA", "EN"
+		tl = "EN"
 	}
 
 	form := url.Values{
 		"text":        {req.Message},
-		"source_lang": {sl},
 		"target_lang": {tl},
 	}
 

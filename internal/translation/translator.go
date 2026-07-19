@@ -14,9 +14,10 @@ const (
 )
 
 type Request struct {
-	Direction Direction
-	Message   string
-	Context   []chat.Message
+	Direction  Direction
+	Message    string
+	Context    []chat.Message
+	TargetLang string
 }
 
 type Translator interface {

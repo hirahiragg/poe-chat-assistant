@@ -10,20 +10,20 @@ import (
 	"github.com/hirahiragg/poe-chat-assistant/internal/chat"
 )
 
-const inboundSystemPrompt = `You are translating Path of Exile chat messages.
+const inboundSystemPromptTmpl = `You are translating Path of Exile chat messages.
 
-Translate the message into natural Japanese.
+Translate the message into natural %s.
 
 Rules:
 - Understand Path of Exile terminology and slang.
 - Keep item names, skill names, and currency names in English when appropriate.
 - Keep common PoE abbreviations (div, ex, chaos, etc.) when appropriate.
 - Do not explain the translation.
-- Return only the Japanese translation.`
+- Return only the translated text.`
 
-const outboundSystemPrompt = `You are helping a Japanese Path of Exile player reply to an English-speaking player.
+const outboundSystemPrompt = `You are helping a Path of Exile player reply to another player.
 
-Convert the Japanese message into natural, concise English suitable for Path of Exile chat.
+Convert the message into natural, concise English suitable for Path of Exile chat.
 
 Rules:
 - Preserve the user's intended meaning.
@@ -32,6 +32,13 @@ Rules:
 - Do not add information the user did not provide.
 - Do not explain the translation.
 - Return only the English message.`
+
+var langNames = map[string]string{
+	"ja": "Japanese",
+	"en": "English",
+	"ko": "Korean",
+	"zh": "Chinese",
+}
 
 type GeminiTranslator struct {
 	client *genai.Client
@@ -53,9 +60,15 @@ func NewGemini(ctx context.Context, apiKey string) (*GeminiTranslator, error) {
 }
 
 func (g *GeminiTranslator) Translate(ctx context.Context, req Request) (string, error) {
-	systemPrompt := inboundSystemPrompt
+	var systemPrompt string
 	if req.Direction == Outbound {
 		systemPrompt = outboundSystemPrompt
+	} else {
+		name := langNames[req.TargetLang]
+		if name == "" {
+			name = req.TargetLang
+		}
+		systemPrompt = fmt.Sprintf(inboundSystemPromptTmpl, name)
 	}
 
 	userMessage := req.Message

@@ -11,6 +11,7 @@ const (
 	ChannelGlobal     Channel = iota // #
 	ChannelTrade                     // $
 	ChannelParty                     // %
+	ChannelGuild                     // &
 	ChannelWhisperIn                 // @From
 	ChannelWhisperOut                // @To
 )
@@ -23,6 +24,8 @@ func (c Channel) String() string {
 		return "Trade"
 	case ChannelParty:
 		return "Party"
+	case ChannelGuild:
+		return "Guild"
 	case ChannelWhisperIn:
 		return "Whisper"
 	case ChannelWhisperOut:
@@ -40,6 +43,8 @@ func (c Channel) Symbol() string {
 		return "$"
 	case ChannelParty:
 		return "%"
+	case ChannelGuild:
+		return "&"
 	case ChannelWhisperIn:
 		return "@"
 	case ChannelWhisperOut:

@@ -6,19 +6,26 @@ import (
 	"path/filepath"
 )
 
+type ChannelFilters struct {
+	Global  *bool `json:"global,omitempty"`
+	Whisper *bool `json:"whisper,omitempty"`
+	Guild   *bool `json:"guild,omitempty"`
+	Party   *bool `json:"party,omitempty"`
+	Trade   *bool `json:"trade,omitempty"`
+}
+
 type Config struct {
-	LogPath    string `json:"log_path"`
-	Translator string `json:"translator"`
-	DeepLKey   string `json:"deepl_api_key,omitempty"`
-	GeminiKey  string `json:"gemini_api_key,omitempty"`
-	SourceLang string `json:"source_language"`
-	TargetLang string `json:"target_language"`
+	LogPath    string         `json:"log_path"`
+	Translator string         `json:"translator"`
+	DeepLKey   string         `json:"deepl_api_key,omitempty"`
+	GeminiKey  string         `json:"gemini_api_key,omitempty"`
+	TargetLang string         `json:"target_language"`
+	Filters    ChannelFilters `json:"channel_filters,omitempty"`
 }
 
 func Default() *Config {
 	return &Config{
 		Translator: "google",
-		SourceLang: "en",
 		TargetLang: "ja",
 	}
 }
@@ -52,9 +59,6 @@ func Load() *Config {
 	_ = json.Unmarshal(data, cfg)
 	if cfg.Translator == "" {
 		cfg.Translator = "google"
-	}
-	if cfg.SourceLang == "" {
-		cfg.SourceLang = "en"
 	}
 	if cfg.TargetLang == "" {
 		cfg.TargetLang = "ja"

@@ -6,6 +6,7 @@ import (
 
 	"gioui.org/font"
 	"gioui.org/layout"
+	"gioui.org/text"
 	"gioui.org/op/clip"
 	"gioui.org/op/paint"
 	"gioui.org/unit"
@@ -13,6 +14,7 @@ import (
 	"gioui.org/widget/material"
 
 	"github.com/hirahiragg/poe-chat-assistant/internal/chat"
+	"github.com/hirahiragg/poe-chat-assistant/internal/config"
 )
 
 type channelFilter struct {
@@ -29,19 +31,46 @@ type ChatList struct {
 	filters  []channelFilter
 }
 
-func NewChatList() *ChatList {
+func boolDefault(p *bool, def bool) bool {
+	if p == nil {
+		return def
+	}
+	return *p
+}
+
+func NewChatList(filters *config.ChannelFilters) *ChatList {
 	cl := &ChatList{selected: -1}
 	cl.list.Axis = layout.Vertical
 	cl.filters = []channelFilter{
-		{label: "#", channel: chat.ChannelGlobal, enabled: true},
-		{label: "$", channel: chat.ChannelTrade, enabled: true},
-		{label: "%", channel: chat.ChannelParty, enabled: true},
-		{label: "@", channel: chat.ChannelWhisperIn, enabled: true},
+		{label: "#", channel: chat.ChannelGlobal, enabled: boolDefault(filters.Global, true)},
+		{label: "@", channel: chat.ChannelWhisperIn, enabled: boolDefault(filters.Whisper, true)},
+		{label: "&", channel: chat.ChannelGuild, enabled: boolDefault(filters.Guild, true)},
+		{label: "%", channel: chat.ChannelParty, enabled: boolDefault(filters.Party, true)},
+		{label: "$", channel: chat.ChannelTrade, enabled: boolDefault(filters.Trade, true)},
 	}
 	return cl
 }
 
 func (cl *ChatList) Selected() int { return cl.selected }
+
+func (cl *ChatList) FiltersConfig() config.ChannelFilters {
+	f := config.ChannelFilters{}
+	for _, cf := range cl.filters {
+		switch cf.channel {
+		case chat.ChannelGlobal:
+			f.Global = &cf.enabled
+		case chat.ChannelWhisperIn:
+			f.Whisper = &cf.enabled
+		case chat.ChannelGuild:
+			f.Guild = &cf.enabled
+		case chat.ChannelParty:
+			f.Party = &cf.enabled
+		case chat.ChannelTrade:
+			f.Trade = &cf.enabled
+		}
+	}
+	return f
+}
 
 func (cl *ChatList) isVisible(ch chat.Channel) bool {
 	for _, f := range cl.filters {
@@ -77,18 +106,24 @@ func (cl *ChatList) SelectNext(max int) {
 	}
 }
 
-func (cl *ChatList) Layout(gtx layout.Context, th *material.Theme, messages []chat.Message, footer func(layout.Context) layout.Dimensions) (layout.Dimensions, bool) {
+type ListEvent struct {
+	SelectionChanged bool
+	FilterChanged    bool
+}
+
+func (cl *ChatList) Layout(gtx layout.Context, th *material.Theme, messages []chat.Message, settingsBtn *widget.Clickable, footer func(layout.Context) layout.Dimensions) (layout.Dimensions, ListEvent) {
 	for len(cl.clicks) < len(messages) {
 		cl.clicks = append(cl.clicks, widget.Clickable{})
 	}
 
-	changed := false
+	var ev ListEvent
 
 	for i := range cl.filters {
 		if cl.filters[i].btn.Clicked(gtx) {
 			cl.filters[i].enabled = !cl.filters[i].enabled
 			cl.selected = -1
-			changed = true
+			ev.FilterChanged = true
+			ev.SelectionChanged = true
 		}
 	}
 
@@ -96,7 +131,7 @@ func (cl *ChatList) Layout(gtx layout.Context, th *material.Theme, messages []ch
 		if cl.clicks[i].Clicked(gtx) {
 			if cl.selected != i {
 				cl.selected = i
-				changed = true
+				ev.SelectionChanged = true
 			}
 		}
 	}
@@ -108,7 +143,7 @@ func (cl *ChatList) Layout(gtx layout.Context, th *material.Theme, messages []ch
 
 	dims := layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			return cl.layoutFilterBar(gtx, th)
+			return cl.layoutFilterBar(gtx, th, settingsBtn)
 		}),
 		layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
 			if len(messages) == 0 && footer == nil {
@@ -126,10 +161,10 @@ func (cl *ChatList) Layout(gtx layout.Context, th *material.Theme, messages []ch
 			})
 		}),
 	)
-	return dims, changed
+	return dims, ev
 }
 
-func (cl *ChatList) layoutFilterBar(gtx layout.Context, th *material.Theme) layout.Dimensions {
+func (cl *ChatList) layoutFilterBar(gtx layout.Context, th *material.Theme, settingsBtn *widget.Clickable) layout.Dimensions {
 	return layout.Background{}.Layout(gtx,
 		func(gtx layout.Context) layout.Dimensions {
 			size := image.Point{X: gtx.Constraints.Max.X, Y: gtx.Constraints.Min.Y}
@@ -141,7 +176,7 @@ func (cl *ChatList) layoutFilterBar(gtx layout.Context, th *material.Theme) layo
 				Top: unit.Dp(4), Bottom: unit.Dp(4),
 				Left: unit.Dp(8), Right: unit.Dp(8),
 			}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-				children := make([]layout.FlexChild, 0, len(cl.filters)*2)
+				children := make([]layout.FlexChild, 0, len(cl.filters)*2+2)
 				for i := range cl.filters {
 					i := i
 					if i > 0 {
@@ -151,6 +186,14 @@ func (cl *ChatList) layoutFilterBar(gtx layout.Context, th *material.Theme) layo
 						return cl.layoutFilterBtn(gtx, th, &cl.filters[i])
 					}))
 				}
+				children = append(children, layout.Flexed(1, layout.Spacer{}.Layout))
+				children = append(children, layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+					return material.Clickable(gtx, settingsBtn, func(gtx layout.Context) layout.Dimensions {
+						lbl := material.Label(th, unit.Sp(11), "Settings")
+						lbl.Color = colorTextDim
+						return lbl.Layout(gtx)
+					})
+				}))
 				return layout.Flex{Alignment: layout.Middle}.Layout(gtx, children...)
 			})
 		},
@@ -158,6 +201,9 @@ func (cl *ChatList) layoutFilterBar(gtx layout.Context, th *material.Theme) layo
 }
 
 func (cl *ChatList) layoutFilterBtn(gtx layout.Context, th *material.Theme, f *channelFilter) layout.Dimensions {
+	btnWidth := gtx.Dp(unit.Dp(28))
+	gtx.Constraints.Min.X = btnWidth
+	gtx.Constraints.Max.X = btnWidth
 	return material.Clickable(gtx, &f.btn, func(gtx layout.Context) layout.Dimensions {
 		return layout.Background{}.Layout(gtx,
 			func(gtx layout.Context) layout.Dimensions {
@@ -177,7 +223,6 @@ func (cl *ChatList) layoutFilterBtn(gtx layout.Context, th *material.Theme, f *c
 			func(gtx layout.Context) layout.Dimensions {
 				return layout.Inset{
 					Top: unit.Dp(3), Bottom: unit.Dp(3),
-					Left: unit.Dp(8), Right: unit.Dp(8),
 				}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 					c := colorBtnText
 					if !f.enabled {
@@ -186,6 +231,7 @@ func (cl *ChatList) layoutFilterBtn(gtx layout.Context, th *material.Theme, f *c
 					lbl := material.Label(th, unit.Sp(11), f.label)
 					lbl.Color = c
 					lbl.Font.Weight = font.Bold
+					lbl.Alignment = text.Middle
 					return lbl.Layout(gtx)
 				})
 			},
@@ -259,6 +305,8 @@ func channelColor(ch chat.Channel) color.NRGBA {
 		return colorTrade
 	case chat.ChannelParty:
 		return colorParty
+	case chat.ChannelGuild:
+		return colorGuild
 	default:
 		return colorGlobal
 	}

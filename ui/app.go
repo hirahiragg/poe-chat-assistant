@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"gioui.org/app"
-	"gioui.org/font"
 	"gioui.org/io/clipboard"
 	"gioui.org/io/key"
 	"gioui.org/io/system"
@@ -24,35 +23,45 @@ import (
 
 type TranslateFunc func(msg chat.Message, replyText string, done func(inbound, outbound string))
 
+type LoadMoreResult int
+
+const (
+	LoadMoreFound    LoadMoreResult = iota // found messages
+	LoadMoreNotFound                       // no messages in range, but more file to read
+	LoadMoreEOF                            // reached beginning of file
+)
+
 type App struct {
 	window       *app.Window
 	theme        *material.Theme
 	chatList     *ChatList
 	detail       *DetailPane
 	store        *chat.Store
+	cfg          *config.Config
 	translate    TranslateFunc
 	settingsBtn  widget.Clickable
 	loadMoreBtn  widget.Clickable
 	settings     *SettingsPane
 	showSettings bool
 	onConfigSave func(*config.Config)
-	onLoadMore   func()
+	onLoadMore   func() LoadMoreResult
 	loading      bool
+	loadResult   LoadMoreResult
 }
 
-func NewApp(store *chat.Store, translateFn TranslateFunc, onConfigSave func(*config.Config), onLoadMore func()) *App {
+func NewApp(store *chat.Store, cfg *config.Config, translateFn TranslateFunc, onConfigSave func(*config.Config), onLoadMore func() LoadMoreResult) *App {
 	w := new(app.Window)
 	w.Option(
-		app.Title("PoE Chat Assistant"),
 		app.Size(unit.Dp(680), unit.Dp(420)),
 		app.MinSize(unit.Dp(500), unit.Dp(300)),
 	)
 	return &App{
 		window:       w,
 		theme:        newTheme(),
-		chatList:     NewChatList(),
+		chatList:     NewChatList(&cfg.Filters),
 		detail:       NewDetailPane(),
 		store:        store,
+		cfg:          cfg,
 		translate:    translateFn,
 		onConfigSave: onConfigSave,
 		onLoadMore:   onLoadMore,
@@ -135,10 +144,10 @@ func (a *App) handleActions(gtx layout.Context) {
 		return
 	}
 
-	if a.loadMoreBtn.Clicked(gtx) && !a.loading && a.onLoadMore != nil {
+	if a.loadMoreBtn.Clicked(gtx) && !a.loading && a.loadResult != LoadMoreEOF && a.onLoadMore != nil {
 		a.loading = true
 		go func() {
-			a.onLoadMore()
+			a.loadResult = a.onLoadMore()
 			a.loading = false
 			a.window.Invalidate()
 		}()
@@ -178,6 +187,10 @@ func (a *App) handleActions(gtx layout.Context) {
 
 	if a.detail.CopyClicked(gtx) {
 		if txt := a.detail.TranslatedOut(); txt != "" {
+			msg := messages[sel]
+			if msg.Channel == chat.ChannelWhisperIn || msg.Channel == chat.ChannelWhisperOut {
+				txt = "@" + msg.Player + " " + txt
+			}
 			gtx.Execute(clipboard.WriteCmd{
 				Type: "application/text",
 				Data: io.NopCloser(strings.NewReader(txt)),
@@ -186,9 +199,17 @@ func (a *App) handleActions(gtx layout.Context) {
 	}
 }
 
+func (a *App) saveFilters() {
+	a.cfg.Filters = a.chatList.FiltersConfig()
+	go a.cfg.Save()
+}
+
 func (a *App) onSelectionChanged() {
-	a.detail.ClearReply()
-	a.detail.ClearTranslation()
+	messages := a.chatList.FilterMessages(a.store.List())
+	sel := a.chatList.Selected()
+	if sel >= 0 && sel < len(messages) {
+		a.detail.SwitchMessage(&messages[sel])
+	}
 }
 
 func (a *App) layout(gtx layout.Context) layout.Dimensions {
@@ -200,12 +221,7 @@ func (a *App) layout(gtx layout.Context) layout.Dimensions {
 		a.chatList.selected = 0
 	}
 
-	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			return a.layoutTopBar(gtx)
-		}),
-		layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
-			return layout.Flex{}.Layout(gtx,
+	return layout.Flex{}.Layout(gtx,
 				layout.Flexed(0.4, func(gtx layout.Context) layout.Dimensions {
 					return a.layoutLeftPane(gtx, messages)
 				}),
@@ -216,53 +232,14 @@ func (a *App) layout(gtx layout.Context) layout.Dimensions {
 					paint.PaintOp{}.Add(gtx.Ops)
 					return layout.Dimensions{Size: size}
 				}),
-				layout.Flexed(0.6, func(gtx layout.Context) layout.Dimensions {
-					return a.layoutRightPane(gtx, messages)
-				}),
-			)
-		}),
-	)
-}
-
-func (a *App) layoutTopBar(gtx layout.Context) layout.Dimensions {
-	return layout.Background{}.Layout(gtx,
-		func(gtx layout.Context) layout.Dimensions {
-			size := image.Point{X: gtx.Constraints.Max.X, Y: gtx.Constraints.Min.Y}
-			fillRect(gtx, colorSurface, size)
-			return layout.Dimensions{Size: size}
-		},
-		func(gtx layout.Context) layout.Dimensions {
-			return layout.Inset{
-				Top: unit.Dp(6), Bottom: unit.Dp(6),
-				Left: unit.Dp(12), Right: unit.Dp(12),
-			}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-				return layout.Flex{Alignment: layout.Middle, Spacing: layout.SpaceBetween}.Layout(gtx,
-					layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
-						lbl := material.Label(a.theme, unit.Sp(13), "PoE Chat Assistant")
-						lbl.Color = colorTextDim
-						lbl.Font.Weight = font.Medium
-						return lbl.Layout(gtx)
-					}),
-					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-						return material.Clickable(gtx, &a.settingsBtn, func(gtx layout.Context) layout.Dimensions {
-							return layout.Inset{
-								Top: unit.Dp(2), Bottom: unit.Dp(2),
-								Left: unit.Dp(8), Right: unit.Dp(8),
-							}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-								lbl := material.Label(a.theme, unit.Sp(14), "Settings")
-								lbl.Color = colorAccent
-								return lbl.Layout(gtx)
-							})
-						})
-					}),
-				)
-			})
-		},
-	)
+			layout.Flexed(0.6, func(gtx layout.Context) layout.Dimensions {
+				return a.layoutRightPane(gtx, messages)
+			}),
+		)
 }
 
 func (a *App) layoutLeftPane(gtx layout.Context, messages []chat.Message) layout.Dimensions {
-	dims, changed := a.chatList.Layout(gtx, a.theme, messages, func(gtx layout.Context) layout.Dimensions {
+	dims, ev := a.chatList.Layout(gtx, a.theme, messages, &a.settingsBtn, func(gtx layout.Context) layout.Dimensions {
 		if a.onLoadMore == nil {
 			return layout.Dimensions{}
 		}
@@ -270,15 +247,25 @@ func (a *App) layoutLeftPane(gtx layout.Context, messages []chat.Message) layout
 			Top: unit.Dp(4), Bottom: unit.Dp(8),
 			Left: unit.Dp(12), Right: unit.Dp(12),
 		}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-			label := "Load More"
-			if a.loading {
+			var label string
+			switch {
+			case a.loading:
 				label = "Loading..."
+			case a.loadResult == LoadMoreEOF:
+				label = "No more messages"
+			case a.loadResult == LoadMoreNotFound:
+				label = "Load More (no chats found, retry)"
+			default:
+				label = "Load More"
 			}
 			return layoutButton(gtx, a.theme, &a.loadMoreBtn, label, colorBtnBg)
 		})
 	})
-	if changed {
+	if ev.SelectionChanged {
 		a.onSelectionChanged()
+	}
+	if ev.FilterChanged {
+		a.saveFilters()
 	}
 	return dims
 }

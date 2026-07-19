@@ -18,9 +18,11 @@ func NewGoogle() *GoogleTranslator {
 }
 
 func (g *GoogleTranslator) Translate(ctx context.Context, req Request) (string, error) {
-	sl, tl := "en", "ja"
+	tl := req.TargetLang
+	sl := "auto"
 	if req.Direction == Outbound {
-		sl, tl = "ja", "en"
+		sl = tl
+		tl = "en"
 	}
 
 	u := "https://translate.googleapis.com/translate_a/single?" + url.Values{

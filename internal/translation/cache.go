@@ -5,8 +5,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	"sync"
-
-	"github.com/hirahiragg/poe-chat-assistant/internal/chat"
 )
 
 type Cache struct {
@@ -20,25 +18,25 @@ func NewCache() *Cache {
 	}
 }
 
-func (c *Cache) Get(dir Direction, message string, context []chat.Message) (string, bool) {
-	key := cacheKey(dir, message, context)
+func (c *Cache) Get(req Request) (string, bool) {
+	key := cacheKey(req)
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	val, ok := c.entries[key]
 	return val, ok
 }
 
-func (c *Cache) Set(dir Direction, message string, context []chat.Message, translation string) {
-	key := cacheKey(dir, message, context)
+func (c *Cache) Set(req Request, translation string) {
+	key := cacheKey(req)
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.entries[key] = translation
 }
 
-func cacheKey(dir Direction, message string, context []chat.Message) string {
+func cacheKey(req Request) string {
 	h := sha256.New()
-	fmt.Fprintf(h, "%s\x00%s", dir, message)
-	for _, m := range context {
+	fmt.Fprintf(h, "%s\x00%s\x00%s", req.Direction, req.Message, req.TargetLang)
+	for _, m := range req.Context {
 		fmt.Fprintf(h, "\x00%s\x00%s", m.Player, m.Body)
 	}
 	return hex.EncodeToString(h.Sum(nil))

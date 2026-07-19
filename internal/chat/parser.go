@@ -31,6 +31,7 @@ var chatPrefixes = []struct {
 	{"#", ChannelGlobal},
 	{"$", ChannelTrade},
 	{"%", ChannelParty},
+	{"&", ChannelGuild},
 }
 
 var guildRe = regexp.MustCompile(`^<([^>]+)>\s*`)

@@ -117,8 +117,9 @@ func runUI(flagLogPath, flagTranslator, flagAPIKey string) {
 
 		if replyText == "" {
 			result, err := currentSvc.Translate(ctx, translation.Request{
-				Direction: translation.Inbound,
-				Message:   msg.Body,
+				Direction:  translation.Inbound,
+				Message:    msg.Body,
+				TargetLang: cfg.TargetLang,
 			})
 			if err != nil {
 				inbound = fmt.Sprintf("error: %v", err)
@@ -129,9 +130,10 @@ func runUI(flagLogPath, flagTranslator, flagAPIKey string) {
 
 		if replyText != "" {
 			result, err := currentSvc.Translate(ctx, translation.Request{
-				Direction: translation.Outbound,
-				Message:   replyText,
-				Context:   []chat.Message{msg},
+				Direction:  translation.Outbound,
+				Message:    replyText,
+				Context:    []chat.Message{msg},
+				TargetLang: cfg.TargetLang,
 			})
 			if err != nil {
 				outbound = fmt.Sprintf("error: %v", err)
@@ -146,26 +148,30 @@ func runUI(flagLogPath, flagTranslator, flagAPIKey string) {
 	const chunkSize int64 = 512 * 1024
 	var loadedBytes int64 = chunkSize
 
-	var loadMore func()
-	loadMore = func() {
+	loadMore := func() ui.LoadMoreResult {
 		if cfg.LogPath == "" {
-			return
+			return ui.LoadMoreEOF
 		}
 		watcher := logwatcher.New(cfg.LogPath)
-		lines, err := watcher.ReadRange(loadedBytes, chunkSize)
-		if err != nil || len(lines) == 0 {
-			return
-		}
-		var msgs []chat.Message
-		for _, line := range lines {
-			if msg, ok := chat.ParseLine(line); ok {
-				msgs = append(msgs, msg)
+		const maxAttempts = 20
+		for range maxAttempts {
+			lines, err := watcher.ReadRange(loadedBytes, chunkSize)
+			if err != nil || len(lines) == 0 {
+				return ui.LoadMoreEOF
+			}
+			var msgs []chat.Message
+			for _, line := range lines {
+				if msg, ok := chat.ParseLine(line); ok {
+					msgs = append(msgs, msg)
+				}
+			}
+			loadedBytes += chunkSize
+			if len(msgs) > 0 {
+				store.Prepend(msgs)
+				return ui.LoadMoreFound
 			}
 		}
-		if len(msgs) > 0 {
-			store.Prepend(msgs)
-		}
-		loadedBytes += chunkSize
+		return ui.LoadMoreNotFound
 	}
 
 	var watchCancel context.CancelFunc
@@ -215,7 +221,7 @@ func runUI(flagLogPath, flagTranslator, flagAPIKey string) {
 		cfg = newCfg
 	}
 
-	application := ui.NewApp(store, translateFn, onConfigSave, loadMore)
+	application := ui.NewApp(store, cfg, translateFn, onConfigSave, loadMore)
 
 	startWatcher(cfg.LogPath, application)
 
@@ -277,8 +283,9 @@ func runTranslate(ctx context.Context, translatorName, apiKey string) {
 		}
 
 		result, err := svc.Translate(ctx, translation.Request{
-			Direction: dir,
-			Message:   msg,
+			Direction:  dir,
+			Message:    msg,
+			TargetLang: "ja",
 		})
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "  error: %v\n", err)
