@@ -1,3 +1,5 @@
 poe-chat-assistant
+/app
 *.exe
 dist/
+.claude/settings.json

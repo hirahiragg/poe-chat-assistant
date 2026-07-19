@@ -26,7 +26,7 @@ func (c Channel) String() string {
 	case ChannelWhisperIn:
 		return "Whisper"
 	case ChannelWhisperOut:
-		return "Whisper(送信)"
+		return "Whisper(out)"
 	default:
 		return "Unknown"
 	}

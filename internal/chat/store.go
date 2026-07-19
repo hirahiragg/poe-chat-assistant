@@ -25,12 +25,27 @@ func (s *Store) Add(msg Message) {
 	}
 }
 
+func (s *Store) Prepend(msgs []Message) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	s.messages = append(msgs, s.messages...)
+}
+
+func (s *Store) SetLimit(n int) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.limit = n
+}
+
 func (s *Store) List() []Message {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
 	out := make([]Message, len(s.messages))
-	copy(out, s.messages)
+	for i, m := range s.messages {
+		out[len(s.messages)-1-i] = m
+	}
 	return out
 }
 

@@ -20,6 +20,54 @@ func New(path string) *Watcher {
 	}
 }
 
+func (w *Watcher) ReadTail(maxBytes int64) ([]string, error) {
+	return w.ReadRange(0, maxBytes)
+}
+
+func (w *Watcher) ReadRange(fromEnd, size int64) ([]string, error) {
+	f, err := os.Open(w.path)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	info, err := f.Stat()
+	if err != nil {
+		return nil, err
+	}
+
+	end := info.Size() - fromEnd
+	if end <= 0 {
+		return nil, nil
+	}
+	start := end - size
+	if start < 0 {
+		start = 0
+	}
+	if _, err := f.Seek(start, io.SeekStart); err != nil {
+		return nil, err
+	}
+
+	scanner := bufio.NewScanner(f)
+	if start > 0 {
+		scanner.Scan()
+	}
+
+	var lines []string
+	var bytesRead int64
+	for scanner.Scan() {
+		bytesRead += int64(len(scanner.Bytes())) + 1
+		if start+bytesRead > end {
+			break
+		}
+		line := scanner.Text()
+		if line != "" {
+			lines = append(lines, line)
+		}
+	}
+	return lines, scanner.Err()
+}
+
 func (w *Watcher) Watch(ctx context.Context, handler func(string)) error {
 	f, err := os.Open(w.path)
 	if err != nil {
