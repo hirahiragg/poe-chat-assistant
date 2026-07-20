@@ -16,7 +16,9 @@
         "width": 680,
         "height": 420,
         "minWidth": 500,
-        "minHeight": 300
+        "minHeight": 300,
+        "decorations": false,
+        "skipTaskbar": true
       }
     ],
     "security": {

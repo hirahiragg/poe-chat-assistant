@@ -107,7 +107,10 @@ export default function SettingsOverlay({
   return (
     <div className="h-screen w-screen bg-bg flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+      <div
+        data-tauri-drag-region
+        className="flex items-center justify-between px-4 py-3 border-b border-border"
+      >
         <span className="text-text font-bold text-sm">Settings</span>
         <button
           onClick={onClose}

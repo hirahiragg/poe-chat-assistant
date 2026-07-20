@@ -24,7 +24,10 @@ export default function FilterBar({
   onSettingsClick,
 }: FilterBarProps) {
   return (
-    <div className="flex items-center justify-between px-2 py-1.5 bg-surface border-b border-border">
+    <div
+      data-tauri-drag-region
+      className="flex items-center justify-between px-2 py-1.5 bg-surface border-b border-border"
+    >
       <div className="flex items-center gap-1">
         {filterButtons.map(({ key, symbol, activeClass }) => {
           const active = filters[key] !== false;
