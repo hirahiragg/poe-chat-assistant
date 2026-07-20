@@ -11,30 +11,6 @@ pub enum Channel {
     WhisperOut,
 }
 
-impl Channel {
-    pub fn symbol(&self) -> &str {
-        match self {
-            Channel::Global => "#",
-            Channel::Trade => "$",
-            Channel::Party => "%",
-            Channel::Guild => "&",
-            Channel::WhisperIn => "@",
-            Channel::WhisperOut => "\u{2192}", // →
-        }
-    }
-
-    pub fn display_name(&self) -> &str {
-        match self {
-            Channel::Global => "Global",
-            Channel::Trade => "Trade",
-            Channel::Party => "Party",
-            Channel::Guild => "Guild",
-            Channel::WhisperIn => "Whisper",
-            Channel::WhisperOut => "Whisper(out)",
-        }
-    }
-}
-
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Message {
     pub timestamp: NaiveDateTime,

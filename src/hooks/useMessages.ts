@@ -63,5 +63,5 @@ export function useMessages() {
     }
   }, [loadState, fetchMessages]);
 
-  return { messages, loadMore, loadState };
+  return { messages, loadMore, loadState, refresh: fetchMessages };
 }

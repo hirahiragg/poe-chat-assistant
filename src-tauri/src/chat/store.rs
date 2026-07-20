@@ -35,6 +35,7 @@ impl Store {
         self.messages.iter().rev().cloned().collect()
     }
 
+    #[allow(dead_code)]
     pub fn len(&self) -> usize {
         self.messages.len()
     }

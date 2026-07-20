@@ -15,3 +15,13 @@ export interface Config {
   hotkey: string;
   channel_filters: ChannelFilters;
 }
+
+export const DEFAULT_CONFIG: Config = {
+  log_path: String.raw`C:\Program Files (x86)\Steam\steamapps\common\Path of Exile\logs\Client.txt`,
+  translator: "google",
+  deepl_api_key: "",
+  gemini_api_key: "",
+  target_language: "ja",
+  hotkey: "",
+  channel_filters: {},
+};

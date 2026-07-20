@@ -30,13 +30,18 @@ function filterMessages(
 }
 
 export default function App() {
-  const { messages, loadMore, loadState } = useMessages();
-  const { config, saveConfig, loading } = useConfig();
+  const { messages, loadMore, loadState, refresh } = useMessages();
+  const { config, saveConfig: rawSaveConfig, loading } = useConfig();
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [splitPercent, setSplitPercent] = useState(40);
   const dragging = useRef(false);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const saveConfig = useCallback(async (newConfig: Parameters<typeof rawSaveConfig>[0]) => {
+    await rawSaveConfig(newConfig);
+    await refresh();
+  }, [rawSaveConfig, refresh]);
 
   const filters = config?.channel_filters ?? {};
 

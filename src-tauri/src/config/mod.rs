@@ -34,8 +34,8 @@ pub struct Config {
 impl Default for Config {
     fn default() -> Self {
         Self {
-            log_path: String::new(),
-            translator: "google".to_string(),
+            log_path: r"C:\Program Files (x86)\Steam\steamapps\common\Path of Exile\logs\Client.txt".to_string(),
+            translator: "Google".to_string(),
             deepl_api_key: String::new(),
             gemini_api_key: String::new(),
             target_language: "ja".to_string(),
@@ -61,7 +61,7 @@ pub fn load() -> Config {
         Err(_) => return Config::default(),
     };
     if cfg.translator.is_empty() {
-        cfg.translator = "google".to_string();
+        cfg.translator = "Google".to_string();
     }
     if cfg.target_language.is_empty() {
         cfg.target_language = "ja".to_string();

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
-import type { Config } from "../types/config";
+import { DEFAULT_CONFIG, type Config } from "../types/config";
 
 interface SettingsOverlayProps {
   config: Config;
@@ -20,6 +20,7 @@ export default function SettingsOverlay({
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
   const [recording, setRecording] = useState(false);
+  const [confirmReset, setConfirmReset] = useState(false);
 
   const update = <K extends keyof Config>(key: K, value: Config[K]) => {
     setDraft((prev) => ({ ...prev, [key]: value }));
@@ -153,7 +154,7 @@ export default function SettingsOverlay({
         <div className="flex flex-col gap-1">
           <label className="text-text-dim text-[11px]">DeepL API Key</label>
           <input
-            type="text"
+            type="password"
             value={draft.deepl_api_key}
             onChange={(e) => update("deepl_api_key", e.target.value)}
             className="bg-card text-text border-none outline-none rounded px-3 py-2 text-sm placeholder:text-text-dim"
@@ -164,7 +165,7 @@ export default function SettingsOverlay({
         <div className="flex flex-col gap-1">
           <label className="text-text-dim text-[11px]">Gemini API Key</label>
           <input
-            type="text"
+            type="password"
             value={draft.gemini_api_key}
             onChange={(e) => update("gemini_api_key", e.target.value)}
             className="bg-card text-text border-none outline-none rounded px-3 py-2 text-sm placeholder:text-text-dim"
@@ -224,17 +225,47 @@ export default function SettingsOverlay({
           </div>
         </div>
 
-        {/* Save */}
-        <div className="flex items-center gap-3 mt-2">
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className="bg-btn-bg text-btn-text rounded px-4 py-1.5 text-xs font-medium hover:brightness-110 transition-colors disabled:opacity-50"
-          >
-            {saving ? "Saving..." : "Save"}
-          </button>
-          {saved && (
-            <span className="text-accent text-xs font-medium">Saved!</span>
+        {/* Save / Reset */}
+        <div className="flex items-center justify-between mt-2">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="bg-btn-bg text-btn-text rounded px-4 py-1.5 text-xs font-medium hover:brightness-110 transition-colors disabled:opacity-50"
+            >
+              {saving ? "Saving..." : "Save"}
+            </button>
+            {saved && (
+              <span className="text-accent text-xs font-medium">Saved!</span>
+            )}
+          </div>
+          {confirmReset ? (
+            <div className="flex items-center gap-2">
+              <span className="text-red-400 text-xs">Reset all settings?</span>
+              <button
+                onClick={() => {
+                  setDraft({ ...DEFAULT_CONFIG });
+                  setSaved(false);
+                  setConfirmReset(false);
+                }}
+                className="bg-red-600 text-white rounded px-3 py-1.5 text-xs font-medium hover:brightness-110 transition-colors"
+              >
+                Yes
+              </button>
+              <button
+                onClick={() => setConfirmReset(false)}
+                className="bg-card text-text-dim rounded px-3 py-1.5 text-xs font-medium hover:text-text transition-colors"
+              >
+                No
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setConfirmReset(true)}
+              className="text-text-dim text-xs hover:text-red-400 transition-colors"
+            >
+              Reset
+            </button>
           )}
         </div>
       </div>
