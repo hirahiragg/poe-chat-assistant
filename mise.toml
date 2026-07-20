@@ -1,0 +1,16 @@
+[tasks.dev]
+description = "Start Tauri dev server"
+run = "npm run tauri dev"
+
+
+[tasks.test]
+description = "Run all tests"
+depends = ["test:rust", "test:frontend"]
+
+[tasks."test:rust"]
+description = "Run Rust unit tests"
+run = "cargo test --manifest-path src-tauri/Cargo.toml"
+
+[tasks."test:frontend"]
+description = "Run frontend unit tests"
+run = "npx vitest run"

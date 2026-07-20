@@ -1,33 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useMessages } from "./hooks/useMessages";
 import { useConfig } from "./hooks/useConfig";
-import { Channel, type Message } from "./types/chat";
 import type { ChannelFilters } from "./types/config";
 import FilterBar from "./components/FilterBar";
 import MessageList from "./components/MessageList";
 import DetailPane from "./components/DetailPane";
 import SettingsOverlay from "./components/SettingsOverlay";
-
-function filterMessages(
-  messages: Message[],
-  filters: ChannelFilters,
-): Message[] {
-  return messages.filter((msg) => {
-    switch (msg.channel) {
-      case Channel.Global:
-        return filters.global !== false;
-      case Channel.Trade:
-        return filters.trade !== false;
-      case Channel.Party:
-        return filters.party !== false;
-      case Channel.Guild:
-        return filters.guild !== false;
-      case Channel.WhisperIn:
-      case Channel.WhisperOut:
-        return filters.whisper !== false;
-    }
-  });
-}
+import { filterMessages } from "./utils/filter";
 
 export default function App() {
   const { messages, loadMore, loadState, refresh } = useMessages();
