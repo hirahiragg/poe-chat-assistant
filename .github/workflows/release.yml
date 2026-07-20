@@ -52,7 +52,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # macOS / Linux: use tauri-action for bundling and release upload
       - name: Build Tauri app
+        if: matrix.platform != 'windows-latest'
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -63,3 +65,18 @@ jobs:
           releaseDraft: false
           prerelease: false
           args: --target ${{ matrix.target }}
+
+      # Windows: build without bundling, upload portable exe
+      - name: Build (Windows)
+        if: matrix.platform == 'windows-latest'
+        run: npx tauri build --target ${{ matrix.target }} --bundles none
+
+      - name: Upload portable exe (Windows)
+        if: matrix.platform == 'windows-latest'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release view ${{ github.ref_name }} || \
+            gh release create ${{ github.ref_name }} --title "${{ github.ref_name }}" --notes "See the assets below to download the app."
+          cp src-tauri/target/${{ matrix.target }}/release/poe-chat-assistant.exe "PoE.Chat.Assistant_x64.exe"
+          gh release upload ${{ github.ref_name }} "PoE.Chat.Assistant_x64.exe" --clobber

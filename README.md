@@ -8,7 +8,7 @@ Communicate smoothly with players around the world.
 
 Download the latest version from [GitHub Releases](https://github.com/hirahiragg/poe-chat-assistant/releases/latest):
 
-- **Windows**: `PoE.Chat.Assistant_x.x.x_x64-setup.exe`
+- **Windows**: `PoE.Chat.Assistant_x64.exe`
 - **macOS (Apple Silicon)**: `PoE.Chat.Assistant_x.x.x_aarch64.dmg`
 - **macOS (Intel)**: `PoE.Chat.Assistant_x.x.x_x64.dmg`
 - **Linux**: `poe-chat-assistant_x.x.x_amd64.deb` / `.AppImage`
