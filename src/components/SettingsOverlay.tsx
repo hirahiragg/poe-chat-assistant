@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
 import { DEFAULT_CONFIG, type Config } from "../types/config";
+import { version as APP_VERSION } from "../../package.json";
 
 interface SettingsOverlayProps {
   config: Config;
@@ -250,7 +251,8 @@ export default function SettingsOverlay({
       </div>
 
       {/* Footer */}
-      <div className="flex items-center justify-end px-4 py-3 border-t border-border">
+      <div className="flex items-center justify-between px-4 py-3 border-t border-border">
+        <span className="text-text-dim text-[10px]">v{APP_VERSION}</span>
         {confirmReset ? (
           <div className="flex items-center gap-2">
             <span className="text-red-400 text-xs">Reset all settings?</span>

@@ -24,6 +24,7 @@ sha2 = "0.10"
 dirs = "6"
 tokio = { version = "1", features = ["full"] }
 libc = "0.2"
+tauri-plugin-window-state = "2.4.1"
 
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
