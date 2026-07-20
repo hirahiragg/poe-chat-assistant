@@ -106,21 +106,11 @@ export default function App() {
     );
   }
 
-  if (showSettings) {
-    return (
-      <SettingsOverlay
-        config={config}
-        onSave={saveConfig}
-        onClose={() => setShowSettings(false)}
-      />
-    );
-  }
-
   const selectedMessage =
     selectedIndex !== null ? filteredMessages[selectedIndex] ?? null : null;
 
   return (
-    <div className="h-screen w-screen bg-bg flex flex-col">
+    <div className="h-screen w-screen bg-bg flex flex-col relative">
       <FilterBar
         filters={filters}
         onToggle={handleToggleFilter}
@@ -152,6 +142,16 @@ export default function App() {
           )}
         </div>
       </div>
+
+      {showSettings && (
+        <div className="absolute inset-0 z-50">
+          <SettingsOverlay
+            config={config}
+            onSave={saveConfig}
+            onClose={() => setShowSettings(false)}
+          />
+        </div>
+      )}
     </div>
   );
 }
