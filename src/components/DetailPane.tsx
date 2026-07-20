@@ -13,16 +13,20 @@ interface DetailPaneProps {
   config: Config;
 }
 
+const fullFmt = new Intl.DateTimeFormat(undefined, {
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+  hour: "2-digit",
+  minute: "2-digit",
+  second: "2-digit",
+  hour12: false,
+});
+
 function formatFullTimestamp(ts: string): string {
   const d = new Date(ts);
   if (isNaN(d.getTime())) return ts;
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const dd = String(d.getDate()).padStart(2, "0");
-  const hh = String(d.getHours()).padStart(2, "0");
-  const min = String(d.getMinutes()).padStart(2, "0");
-  const ss = String(d.getSeconds()).padStart(2, "0");
-  return `${yyyy}/${mm}/${dd} ${hh}:${min}:${ss}`;
+  return fullFmt.format(d);
 }
 
 export default function DetailPane({ message, config }: DetailPaneProps) {
