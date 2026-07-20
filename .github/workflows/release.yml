@@ -65,7 +65,7 @@ jobs:
       # Windows: build without bundling, upload portable exe
       - name: Build (Windows)
         if: matrix.platform == 'windows-latest'
-        run: npx tauri build --target ${{ matrix.target }} --bundles none
+        run: npx tauri build --target ${{ matrix.target }} --no-bundle
 
       - name: Upload portable exe (Windows)
         if: matrix.platform == 'windows-latest'
