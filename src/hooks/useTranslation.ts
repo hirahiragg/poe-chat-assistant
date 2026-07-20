@@ -17,6 +17,7 @@ export function useTranslation() {
   const [, setTick] = useState(0);
   const [translatingMsg, setTranslatingMsg] = useState(false);
   const [translatingOut, setTranslatingOut] = useState(false);
+  const [translateError, setTranslateError] = useState<string | null>(null);
 
   const forceUpdate = useCallback(() => {
     setTick((t) => t + 1);
@@ -30,6 +31,7 @@ export function useTranslation() {
     async (message: Message, targetLang: string) => {
       const key = cacheKey(message);
       setTranslatingMsg(true);
+      setTranslateError(null);
       try {
         const result = await invoke<string>("translate_message", {
           message: message.body,
@@ -43,6 +45,8 @@ export function useTranslation() {
         cacheRef.current.set(key, entry);
         forceUpdate();
       } catch (err) {
+        const msg = typeof err === "string" ? err : String(err);
+        setTranslateError(msg);
         console.error("Inbound translation failed:", err);
       } finally {
         setTranslatingMsg(false);
@@ -77,6 +81,8 @@ export function useTranslation() {
         cacheRef.current.set(key, current);
         forceUpdate();
       } catch (err) {
+        const msg = typeof err === "string" ? err : String(err);
+        setTranslateError(msg);
         console.error("Outbound translation failed:", err);
       } finally {
         setTranslatingOut(false);
@@ -99,6 +105,7 @@ export function useTranslation() {
     cache: cacheRef.current,
     translatingMsg,
     translatingOut,
+    translateError,
     translateInbound,
     translateOutbound,
     getCache,

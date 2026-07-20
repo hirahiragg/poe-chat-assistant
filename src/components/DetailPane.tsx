@@ -33,6 +33,7 @@ export default function DetailPane({ message, config }: DetailPaneProps) {
   const {
     translatingMsg,
     translatingOut,
+    translateError,
     translateInbound,
     translateOutbound,
     getCache,
@@ -113,6 +114,9 @@ export default function DetailPane({ message, config }: DetailPaneProps) {
             {translatingMsg ? "..." : hasInbound ? "Re-translate" : "Translate"}
           </button>
         </div>
+        {translateError && (
+          <div className="text-red-400 text-xs mt-2">{translateError}</div>
+        )}
         {hasInbound && (
           <div className="text-translated text-sm mt-2 leading-relaxed">
             {cached!.translatedMsg}
