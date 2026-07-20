@@ -19,7 +19,7 @@ export interface Config {
 
 export const DEFAULT_CONFIG: Config = {
   log_path: String.raw`C:\Program Files (x86)\Steam\steamapps\common\Path of Exile\logs\Client.txt`,
-  translator: "google",
+  translator: "Google",
   deepl_api_key: "",
   gemini_api_key: "",
   gemini_model: "gemini-3.5-flash",
