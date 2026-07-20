@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
 import { DEFAULT_CONFIG, type Config } from "../types/config";
 
@@ -17,23 +17,34 @@ export default function SettingsOverlay({
   onClose,
 }: SettingsOverlayProps) {
   const [draft, setDraft] = useState<Config>({ ...config });
-  const [saved, setSaved] = useState(false);
-  const [saving, setSaving] = useState(false);
   const [recording, setRecording] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const autoSave = useCallback(
+    (newDraft: Config) => {
+      if (saveTimer.current) clearTimeout(saveTimer.current);
+      saveTimer.current = setTimeout(() => {
+        onSave(newDraft);
+      }, 500);
+    },
+    [onSave],
+  );
+
+  useEffect(() => {
+    return () => {
+      if (saveTimer.current) clearTimeout(saveTimer.current);
+    };
+  }, []);
 
   const update = <K extends keyof Config>(key: K, value: Config[K]) => {
-    setDraft((prev) => ({ ...prev, [key]: value }));
-    setSaved(false);
+    const newDraft = { ...draft, [key]: value };
+    setDraft(newDraft);
+    autoSave(newDraft);
   };
 
   const keyToString = useCallback((e: KeyboardEvent): string | null => {
-    const modifierKeys = new Set([
-      "Control",
-      "Shift",
-      "Alt",
-      "Meta",
-    ]);
+    const modifierKeys = new Set(["Control", "Shift", "Alt", "Meta"]);
     if (modifierKeys.has(e.key)) return null;
 
     const parts: string[] = [];
@@ -49,7 +60,9 @@ export default function SettingsOverlay({
       Escape: "escape",
     };
 
-    const key = keyMap[e.key] ?? (e.key.length === 1 ? e.key.toLowerCase() : e.key.toLowerCase());
+    const key =
+      keyMap[e.key] ??
+      (e.key.length === 1 ? e.key.toLowerCase() : e.key.toLowerCase());
     parts.push(key);
     return parts.join("+");
   }, []);
@@ -82,16 +95,11 @@ export default function SettingsOverlay({
     }
   };
 
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      await onSave(draft);
-      setSaved(true);
-    } catch {
-      // error logged in hook
-    } finally {
-      setSaving(false);
-    }
+  const handleReset = () => {
+    const newDraft = { ...DEFAULT_CONFIG };
+    setDraft(newDraft);
+    setConfirmReset(false);
+    onSave(newDraft);
   };
 
   const isPresetLang = presetLangs.includes(draft.target_language);
@@ -194,7 +202,7 @@ export default function SettingsOverlay({
               value={isPresetLang ? "" : draft.target_language}
               onChange={(e) => update("target_language", e.target.value)}
               placeholder="custom"
-              className="bg-card text-text border-none outline-none rounded px-3 py-1.5 text-xs w-20 placeholder:text-text-dim"
+              className="bg-card text-text border-none outline-none rounded px-3 py-1.5 text-xs w-16 text-center placeholder:text-text-dim"
             />
           </div>
         </div>
@@ -224,50 +232,34 @@ export default function SettingsOverlay({
             </button>
           </div>
         </div>
+      </div>
 
-        {/* Save / Reset */}
-        <div className="flex items-center justify-between mt-2">
-          <div className="flex items-center gap-3">
+      {/* Footer */}
+      <div className="flex items-center justify-end px-4 py-3 border-t border-border">
+        {confirmReset ? (
+          <div className="flex items-center gap-2">
+            <span className="text-red-400 text-xs">Reset all settings?</span>
             <button
-              onClick={handleSave}
-              disabled={saving}
-              className="bg-btn-bg text-btn-text rounded px-4 py-1.5 text-xs font-medium hover:brightness-110 transition-colors disabled:opacity-50"
+              onClick={handleReset}
+              className="bg-red-600 text-white rounded px-3 py-1.5 text-xs font-medium hover:brightness-110 transition-colors"
             >
-              {saving ? "Saving..." : "Save"}
+              Yes
             </button>
-            {saved && (
-              <span className="text-accent text-xs font-medium">Saved!</span>
-            )}
+            <button
+              onClick={() => setConfirmReset(false)}
+              className="bg-card text-text-dim rounded px-3 py-1.5 text-xs font-medium hover:text-text transition-colors"
+            >
+              No
+            </button>
           </div>
-          {confirmReset ? (
-            <div className="flex items-center gap-2">
-              <span className="text-red-400 text-xs">Reset all settings?</span>
-              <button
-                onClick={() => {
-                  setDraft({ ...DEFAULT_CONFIG });
-                  setSaved(false);
-                  setConfirmReset(false);
-                }}
-                className="bg-red-600 text-white rounded px-3 py-1.5 text-xs font-medium hover:brightness-110 transition-colors"
-              >
-                Yes
-              </button>
-              <button
-                onClick={() => setConfirmReset(false)}
-                className="bg-card text-text-dim rounded px-3 py-1.5 text-xs font-medium hover:text-text transition-colors"
-              >
-                No
-              </button>
-            </div>
-          ) : (
-            <button
-              onClick={() => setConfirmReset(true)}
-              className="text-text-dim text-xs hover:text-red-400 transition-colors"
-            >
-              Reset
-            </button>
-          )}
-        </div>
+        ) : (
+          <button
+            onClick={() => setConfirmReset(true)}
+            className="bg-red-900/50 text-red-400 rounded px-4 py-1.5 text-xs font-medium hover:bg-red-900/80 transition-colors"
+          >
+            Reset
+          </button>
+        )}
       </div>
     </div>
   );
