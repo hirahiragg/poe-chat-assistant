@@ -9,8 +9,6 @@ Communicate smoothly with players around the world.
 Download the latest version from [GitHub Releases](https://github.com/hirahiragg/poe-chat-assistant/releases/latest):
 
 - **Windows**: `PoE.Chat.Assistant_x64.exe`
-- **macOS (Apple Silicon)**: `PoE.Chat.Assistant_x.x.x_aarch64.dmg`
-- **macOS (Intel)**: `PoE.Chat.Assistant_x.x.x_x64.dmg`
 - **Linux**: `poe-chat-assistant_x.x.x_amd64.deb` / `.AppImage`
 
 Just download, run, and point the app to your Client.txt.
@@ -82,7 +80,7 @@ Build artifacts are generated in `src-tauri/target/release/bundle/`.
 
 ### Release
 
-Push a version tag to trigger a GitHub Actions build for Windows (exe) and macOS (dmg):
+Push a version tag to trigger a GitHub Actions build for Windows (exe) and Linux (deb/AppImage):
 
 ```bash
 git tag v0.1.0
@@ -95,11 +93,10 @@ Binaries are automatically uploaded to [GitHub Releases](https://github.com/hira
 
 Settings are stored in the OS standard config directory:
 
-| OS      | Path                                                         |
-| ------- | ------------------------------------------------------------ |
-| Windows | `%APPDATA%\poe-chat-assistant\config.json`                   |
-| macOS   | `~/Library/Application Support/poe-chat-assistant/config.json` |
-| Linux   | `~/.config/poe-chat-assistant/config.json`                   |
+| OS      | Path                                                       |
+| ------- | ---------------------------------------------------------- |
+| Windows | `%APPDATA%\poe-chat-assistant\config.json`                 |
+| Linux   | `~/.config/poe-chat-assistant/config.json`                 |
 
 ### Default Client.txt Path
 
@@ -107,7 +104,7 @@ Settings are stored in the OS standard config directory:
 C:\Program Files (x86)\Steam\steamapps\common\Path of Exile\logs\Client.txt
 ```
 
-On macOS / Linux, set the path manually in Settings.
+On Linux, set the path manually in Settings.
 
 ## Test Data
 
