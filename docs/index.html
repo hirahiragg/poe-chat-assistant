@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PoE Chat Assistant</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #1a1a1a; color: #ccc;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    line-height: 1.7; max-width: 720px; margin: 0 auto; padding: 2rem 1.5rem;
+  }
+  a { color: #d4a24e; }
+  h1 { color: #eee; font-size: 1.5rem; font-weight: 600; margin-bottom: 0.25rem; }
+  h2 { color: #eee; font-size: 1.1rem; font-weight: 600; margin: 2rem 0 0.5rem; }
+  p { margin-bottom: 1rem; }
+  img { max-width: 100%; border-radius: 6px; border: 1px solid #333; margin: 0.75rem 0; }
+  .lang { text-align: right; margin-bottom: 1rem; font-size: 0.85rem; }
+  .lang a { cursor: pointer; margin-left: 0.5rem; text-decoration: none; color: #888; }
+  .lang a.active { color: #d4a24e; }
+  .lang-en [data-lang="ja"],
+  .lang-ja [data-lang="en"] { display: none !important; }
+  .hero {
+    text-align: center; padding: 2.5rem 0 2rem;
+    border-bottom: 1px solid #333; margin-bottom: 2rem;
+  }
+  .hero h1 { font-size: 1.8rem; margin-bottom: 0.5rem; }
+  .hero p { color: #999; margin-bottom: 1.5rem; }
+  .hero-actions { display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    padding: 0.6rem 1.4rem; border-radius: 5px;
+    font-size: 0.85rem; font-weight: 600; text-decoration: none;
+    transition: all 0.2s;
+  }
+  .btn-primary { background: #d4a24e; color: #1a1a1a; }
+  .btn-primary:hover { filter: brightness(1.15); }
+  .btn-secondary { background: transparent; color: #ccc; border: 1px solid #444; }
+  .btn-secondary:hover { border-color: #888; color: #eee; }
+  .btn svg { width: 16px; height: 16px; }
+  .dl-cards { display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; margin-top: 0.75rem; }
+  .dl-card {
+    background: #222; border: 1px solid #333; border-radius: 6px;
+    padding: 1rem 1.5rem; text-decoration: none; color: #ccc;
+    transition: border-color 0.2s; min-width: 150px;
+  }
+  .dl-card:hover { border-color: #7b6b4a; }
+  .dl-card .dl-os { font-size: 0.85rem; font-weight: 600; color: #eee; }
+  .dl-card .dl-file { font-size: 0.72rem; color: #888; margin-top: 0.15rem; }
+  .footer { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid #333; font-size: 0.8rem; color: #666; }
+</style>
+</head>
+<body class="lang-en">
+
+<div class="lang">
+  <a onclick="setLang('en')" class="active">EN</a>
+  <a onclick="setLang('ja')">JA</a>
+</div>
+
+<div class="hero">
+  <h1>PoE Chat Assistant</h1>
+  <p>
+    <span data-lang="en">Real-time Path of Exile chat monitor with built-in translation.</span>
+    <span data-lang="ja">Path of Exile のログをリアルタイムに監視し、翻訳機能を内蔵したデスクトップアプリ</span>
+  </p>
+  <div class="hero-actions">
+    <a href="https://github.com/hirahiragg/poe-chat-assistant/releases/latest" class="btn btn-primary">
+      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 12l-4-4h2.5V4h3v4H12L8 12z"/><path d="M13 13H3v1h10v-1z"/></svg>
+      Download
+    </a>
+    <a href="https://github.com/hirahiragg/poe-chat-assistant" class="btn btn-secondary">
+      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+      GitHub
+    </a>
+  </div>
+  <div class="dl-cards">
+    <a href="https://github.com/hirahiragg/poe-chat-assistant/releases/latest" class="dl-card">
+      <div class="dl-os">Windows</div>
+      <div class="dl-file">.exe (portable)</div>
+    </a>
+    <a href="https://github.com/hirahiragg/poe-chat-assistant/releases/latest" class="dl-card">
+      <div class="dl-os">Linux</div>
+      <div class="dl-file">.deb / .AppImage</div>
+    </a>
+  </div>
+</div>
+
+<h2>
+  <span data-lang="en">Chat Log Viewer</span>
+  <span data-lang="ja">チャットログビューア</span>
+</h2>
+<p>
+  <span data-lang="en">Monitors Client.txt and displays messages in real time. Filter by channel: Global, Whisper, Party, Guild, Trade.</span>
+  <span data-lang="ja">Client.txt を監視し、メッセージをリアルタイムに表示します。Global, Whisper, Party, Guild, Trade でフィルタリングできます</span>
+</p>
+<img src="screenshots/main.png" alt="Main view">
+
+<h2>
+  <span data-lang="en">Translation</span>
+  <span data-lang="ja">翻訳</span>
+</h2>
+<p>
+  <span data-lang="en">Translate incoming messages with one click. Type a reply, translate it, and copy it into PoE. Supports Google Translate, DeepL, and Gemini.</span>
+  <span data-lang="ja">受信メッセージをワンクリックで翻訳できます。返信を入力して翻訳し、クリップボードにコピーできます。Google 翻訳、DeepL、Gemini に対応しています</span>
+</p>
+<img src="screenshots/translation.png" alt="Translation view">
+
+<h2>
+  <span data-lang="en">Settings</span>
+  <span data-lang="ja">設定</span>
+</h2>
+<p>
+  <span data-lang="en">Auto-saved settings. Configure Client.txt path, translator, target language, and global hotkey.</span>
+  <span data-lang="ja">設定は変更時に自動保存されます。Client.txt パス、翻訳エンジン、翻訳先言語、ホットキーを設定できます</span>
+</p>
+<img src="screenshots/settings.png" alt="Settings view">
+
+<h2>
+  <span data-lang="en">Overlay Mode</span>
+  <span data-lang="ja">オーバーレイモード</span>
+</h2>
+<p>
+  <span data-lang="en">Always-on-top overlay with a configurable hotkey. Auto-hides when PoE regains focus.</span>
+  <span data-lang="ja">設定可能なホットキーで表示を切り替えられます。PoE にフォーカスが戻ると自動で非表示になります</span>
+</p>
+
+<div class="footer">
+  MIT License &middot; <a href="https://github.com/hirahiragg/poe-chat-assistant">GitHub</a>
+</div>
+
+<script>
+function setLang(l) {
+  document.body.className = 'lang-' + l;
+  document.querySelectorAll('.lang a').forEach(function(a) {
+    a.classList.toggle('active', a.textContent.trim().toLowerCase() === l);
+  });
+  try { localStorage.setItem('lang', l); } catch(e) {}
+}
+try {
+  var s = localStorage.getItem('lang');
+  if (s) setLang(s);
+  else if (navigator.language.startsWith('ja')) setLang('ja');
+} catch(e) {}
+</script>
+</body>
+</html>
