@@ -1,0 +1,25 @@
+2025/07/20 18:00:03 10000000 aabbccdd [INFO Client 12345] ***** LOG FILE OPENING *****
+2025/07/20 18:05:12 10100000 aabbccdd [INFO Client 12345] #ShadowBlade_IX: anyone know where to find the trial of stinging doubt?
+2025/07/20 18:05:45 10200000 aabbccdd [INFO Client 12345] #<Exiles> VaalSpark_Queen: act 3, the crematorium. gl!
+2025/07/20 18:06:30 10300000 aabbccdd [INFO Client 12345] $CurrencyFlip_Pro: WTS 6L Astral Plate 550 life 80 res, 3 divine
+2025/07/20 18:07:01 10400000 aabbccdd [INFO Client 12345] $GemHoarder: WTB level 4 Empower, paying 5 div
+2025/07/20 18:08:15 10500000 aabbccdd [INFO Client 12345] @From <WRLD> xXDeathMarkXx: hey, are you still selling that Headhunter?
+2025/07/20 18:08:42 10600000 aabbccdd [INFO Client 12345] @To xXDeathMarkXx: yeah, 50 div. want to trade?
+2025/07/20 18:09:10 10700000 aabbccdd [INFO Client 12345] @From xXDeathMarkXx: sure, invite me
+2025/07/20 18:10:05 10800000 aabbccdd [INFO Client 12345] %<Neon> FlickerBoi: ready for boss? i have portals up
+2025/07/20 18:10:33 10900000 aabbccdd [INFO Client 12345] %ArcWitch_Zap: omw, 1 sec switching gems
+2025/07/20 18:11:20 11000000 aabbccdd [INFO Client 12345] &<Neon> GuildMaster_Ori: guild event this weekend, map race on Saturday 8pm EST
+2025/07/20 18:11:55 11100000 aabbccdd [INFO Client 12345] &<Neon> ColdSnapFreeze: sounds fun, count me in!
+2025/07/20 18:12:30 11200000 aabbccdd [INFO Client 12345] #ReallyFurious: does anyone have a spare waypoint to act 9?
+2025/07/20 18:13:10 11300000 aabbccdd [INFO Client 12345] @From NecroManiac_22: Hi, I would like to buy your Bottled Faith listed for 15 divine in Standard (stash tab "Shop"; position: left 3, top 5)
+2025/07/20 18:13:45 11400000 aabbccdd [INFO Client 12345] @To NecroManiac_22: sold, sorry
+2025/07/20 18:14:20 11500000 aabbccdd [INFO Client 12345] $<BOOM> ExplosiveArrow: WTS Mageblood 85 div, cheapest on trade
+2025/07/20 18:15:00 11600000 aabbccdd [INFO Client 12345] #弱毒性プチ: おはようございます、今日マップ一緒にやりませんか？
+2025/07/20 18:15:35 11700000 aabbccdd [INFO Client 12345] #<JP> 雷撃の魔女: いいですね！あと30分で準備できます
+2025/07/20 18:16:10 11800000 aabbccdd [INFO Client 12345] %<Neon> FlickerBoi: nice loot! who needs the div card?
+2025/07/20 18:16:40 11900000 aabbccdd [INFO Client 12345] &<Neon> GuildMaster_Ori: reminder: deposit your maps in the guild stash before the event
+2025/07/20 18:17:15 12000000 aabbccdd [INFO Client 12345] @From <KR> 번개화살: 안녕하세요, 거래하고 싶습니다
+2025/07/20 18:17:50 12100000 aabbccdd [INFO Client 12345] @To 번개화살: sure, invite sent
+2025/07/20 18:18:25 12200000 aabbccdd [INFO Client 12345] $MirrorService_1: WTS Mirror of Kalandra service, 50+ vouches, check thread
+2025/07/20 18:19:00 12300000 aabbccdd [INFO Client 12345] #ChaosCrafter: just dropped a mirror in a random blue map lmao
+2025/07/20 18:19:35 12400000 aabbccdd [INFO Client 12345] #VaalSpark_Queen: no way, congrats!
