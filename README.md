@@ -4,6 +4,10 @@ A desktop application that monitors Path of Exile chat logs in real time with bu
 
 Communicate smoothly with players around the world.
 
+## Demo
+
+[![Demo Video](https://img.youtube.com/vi/HjmaUZ8pfFU/maxresdefault.jpg)](https://youtu.be/HjmaUZ8pfFU)
+
 ## Download
 
 Download the latest version from [GitHub Releases](https://github.com/hirahiragg/poe-chat-assistant/releases/latest):
