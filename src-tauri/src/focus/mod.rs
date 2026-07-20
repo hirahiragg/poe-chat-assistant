@@ -124,6 +124,7 @@ pub fn start_focus_watcher(
             }
 
             if was_self && !is_self {
+                use tauri::Manager;
                 if let Some(window) = app_handle.get_webview_window("main") {
                     let _ = window.hide();
                 }
