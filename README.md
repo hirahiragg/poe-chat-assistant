@@ -4,6 +4,17 @@ A desktop application that monitors Path of Exile chat logs in real time with bu
 
 Communicate smoothly with players around the world.
 
+## Download
+
+Download the latest version from [GitHub Releases](https://github.com/hirahiragg/poe-chat-assistant/releases/latest):
+
+- **Windows**: `PoE.Chat.Assistant_x.x.x_x64-setup.exe`
+- **macOS (Apple Silicon)**: `PoE.Chat.Assistant_x.x.x_aarch64.dmg`
+- **macOS (Intel)**: `PoE.Chat.Assistant_x.x.x_x64.dmg`
+- **Linux**: `poe-chat-assistant_x.x.x_amd64.deb` / `.AppImage`
+
+Just download, run, and point the app to your Client.txt.
+
 ![Main View](docs/screenshots/main.png)
 
 ## Features
@@ -68,6 +79,17 @@ npm run tauri build
 ```
 
 Build artifacts are generated in `src-tauri/target/release/bundle/`.
+
+### Release
+
+Push a version tag to trigger a GitHub Actions build for Windows (exe) and macOS (dmg):
+
+```bash
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+Binaries are automatically uploaded to [GitHub Releases](https://github.com/hirahiragg/poe-chat-assistant/releases).
 
 ## Configuration
 
