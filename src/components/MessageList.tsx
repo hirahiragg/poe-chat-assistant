@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import type { Message } from "../types/chat";
 import type { LoadState } from "../hooks/useMessages";
 import MessageItem from "./MessageItem";
@@ -35,6 +35,7 @@ export default function MessageList({
 }: MessageListProps) {
   const listRef = useRef<HTMLDivElement>(null);
   const prevCountRef = useRef(messages.length);
+  const prevScrollHeightRef = useRef(0);
   const isLoadMore = useRef(false);
   const isNearTop = useRef(true);
   const [newCount, setNewCount] = useState(0);
@@ -47,18 +48,24 @@ export default function MessageList({
     }
   }, [newCount]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
+    if (!listRef.current) return;
+
     const added = messages.length - prevCountRef.current;
     if (added > 0 && !isLoadMore.current) {
       if (isNearTop.current) {
-        if (listRef.current) listRef.current.scrollTop = 0;
+        listRef.current.scrollTop = 0;
       } else {
+        const delta = listRef.current.scrollHeight - prevScrollHeightRef.current;
+        listRef.current.scrollTop += delta;
         setNewCount((c) => c + added);
       }
     }
+
+    prevScrollHeightRef.current = listRef.current.scrollHeight;
     isLoadMore.current = false;
     prevCountRef.current = messages.length;
-  }, [messages.length]);
+  }, [messages]);
 
   const handleLoadMore = () => {
     isLoadMore.current = true;

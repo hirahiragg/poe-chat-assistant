@@ -48,6 +48,10 @@ export function channelColor(ch: Channel): string {
   }
 }
 
+export function messageKey(msg: Message): string {
+  return `${msg.timestamp}|${msg.channel}|${msg.player}|${msg.body}`;
+}
+
 export function channelBgColor(ch: Channel): string {
   switch (ch) {
     case Channel.Global:

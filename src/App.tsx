@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useMessages } from "./hooks/useMessages";
 import { useConfig } from "./hooks/useConfig";
 import type { ChannelFilters } from "./types/config";
+import { messageKey } from "./types/chat";
 import FilterBar from "./components/FilterBar";
 import MessageList from "./components/MessageList";
 import DetailPane from "./components/DetailPane";
@@ -11,7 +12,7 @@ import { filterMessages } from "./utils/filter";
 export default function App() {
   const { messages, loadMore, loadState, refresh } = useMessages();
   const { config, saveConfig: rawSaveConfig, loading } = useConfig();
-  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [splitPercent, setSplitPercent] = useState(40);
   const dragging = useRef(false);
@@ -29,6 +30,12 @@ export default function App() {
     [messages, filters],
   );
 
+  const selectedIndex = useMemo(() => {
+    if (selectedKey === null) return null;
+    const idx = filteredMessages.findIndex((m) => messageKey(m) === selectedKey);
+    return idx === -1 ? null : idx;
+  }, [selectedKey, filteredMessages]);
+
   const handleToggleFilter = useCallback(
     (key: keyof ChannelFilters) => {
       if (!config) return;
@@ -41,8 +48,9 @@ export default function App() {
   );
 
   const handleSelect = useCallback((index: number) => {
-    setSelectedIndex(index);
-  }, []);
+    const msg = filteredMessages[index];
+    if (msg) setSelectedKey(messageKey(msg));
+  }, [filteredMessages]);
 
   const handleDragStart = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
@@ -79,24 +87,24 @@ export default function App() {
 
       if (e.key === "ArrowDown") {
         e.preventDefault();
-        setSelectedIndex((prev) => {
-          if (prev === null) return 0;
-          return Math.min(prev + 1, filteredMessages.length - 1);
-        });
+        const cur = selectedIndex ?? -1;
+        const next = Math.min(cur + 1, filteredMessages.length - 1);
+        const msg = filteredMessages[next];
+        if (msg) setSelectedKey(messageKey(msg));
       } else if (e.key === "ArrowUp") {
         e.preventDefault();
-        setSelectedIndex((prev) => {
-          if (prev === null) return 0;
-          return Math.max(prev - 1, 0);
-        });
+        const cur = selectedIndex ?? 1;
+        const next = Math.max(cur - 1, 0);
+        const msg = filteredMessages[next];
+        if (msg) setSelectedKey(messageKey(msg));
       } else if (e.key === "Escape") {
-        setSelectedIndex(null);
+        setSelectedKey(null);
       }
     };
 
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [showSettings, filteredMessages.length]);
+  }, [showSettings, filteredMessages, selectedIndex]);
 
   if (loading || !config) {
     return (
