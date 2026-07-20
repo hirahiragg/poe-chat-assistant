@@ -103,9 +103,11 @@ pub fn start_focus_watcher(
 ) {
     std::thread::spawn(move || {
         let mut was_active = false;
+        let mut was_self = false;
 
         while !cancel.load(Ordering::Relaxed) {
             let is_active = is_poe_or_self_active();
+            let is_self = is_self_focused();
 
             if is_active != was_active {
                 was_active = is_active;
@@ -121,6 +123,13 @@ pub fn start_focus_watcher(
                 }
             }
 
+            if was_self && !is_self {
+                if let Some(window) = app_handle.get_webview_window("main") {
+                    let _ = window.hide();
+                }
+            }
+
+            was_self = is_self;
             std::thread::sleep(std::time::Duration::from_millis(250));
         }
     });
