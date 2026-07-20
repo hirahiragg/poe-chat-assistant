@@ -3,3 +3,8 @@ poe-chat-assistant
 *.exe
 dist/
 .claude/settings.json
+
+# Tauri
+tauri-app/node_modules/
+tauri-app/dist/
+tauri-app/src-tauri/target/
