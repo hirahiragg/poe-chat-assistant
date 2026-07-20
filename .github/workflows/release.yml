@@ -16,10 +16,6 @@ jobs:
         include:
           - platform: windows-latest
             target: x86_64-pc-windows-msvc
-          - platform: macos-latest
-            target: aarch64-apple-darwin
-          - platform: macos-latest
-            target: x86_64-apple-darwin
           - platform: ubuntu-22.04
             target: x86_64-unknown-linux-gnu
 
@@ -52,9 +48,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # macOS / Linux: use tauri-action for bundling and release upload
+      # Linux: use tauri-action for bundling and release upload
       - name: Build Tauri app
-        if: matrix.platform != 'windows-latest'
+        if: matrix.platform == 'ubuntu-22.04'
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
