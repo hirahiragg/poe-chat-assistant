@@ -9,13 +9,14 @@ interface FilterBarProps {
 const filterButtons: {
   key: keyof ChannelFilters;
   symbol: string;
+  label: string;
   activeClass: string;
 }[] = [
-  { key: "global", symbol: "#", activeClass: "bg-ch-global" },
-  { key: "whisper", symbol: "@", activeClass: "bg-ch-whisper" },
-  { key: "guild", symbol: "&", activeClass: "bg-ch-guild" },
-  { key: "party", symbol: "%", activeClass: "bg-ch-party" },
-  { key: "trade", symbol: "$", activeClass: "bg-ch-trade" },
+  { key: "global", symbol: "#", label: "Global", activeClass: "bg-ch-global" },
+  { key: "whisper", symbol: "@", label: "Whisper", activeClass: "bg-ch-whisper" },
+  { key: "guild", symbol: "&", label: "Guild", activeClass: "bg-ch-guild" },
+  { key: "party", symbol: "%", label: "Party", activeClass: "bg-ch-party" },
+  { key: "trade", symbol: "$", label: "Trade", activeClass: "bg-ch-trade" },
 ];
 
 export default function FilterBar({
@@ -29,12 +30,13 @@ export default function FilterBar({
       className="flex items-center justify-between px-2 py-1.5 bg-surface border-b border-border"
     >
       <div className="flex items-center gap-1">
-        {filterButtons.map(({ key, symbol, activeClass }) => {
+        {filterButtons.map(({ key, symbol, label, activeClass }) => {
           const active = filters[key] !== false;
           return (
             <button
               key={key}
               onClick={() => onToggle(key)}
+              title={label}
               className={`w-7 h-7 rounded text-xs font-bold flex items-center justify-center transition-colors ${
                 active
                   ? `${activeClass} text-white`
