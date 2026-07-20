@@ -183,6 +183,18 @@ export default function SettingsOverlay({
           />
         </div>
 
+        {/* Gemini Model */}
+        <div className="flex flex-col gap-1">
+          <label className="text-text-dim text-[11px]">Gemini Model</label>
+          <input
+            type="text"
+            value={draft.gemini_model}
+            onChange={(e) => update("gemini_model", e.target.value)}
+            placeholder="gemini-3.5-flash"
+            className="bg-card text-text border-none outline-none rounded px-3 py-2 text-sm placeholder:text-text-dim"
+          />
+        </div>
+
         {/* Target Language */}
         <div className="flex flex-col gap-1">
           <label className="text-text-dim text-[11px]">Target Language</label>

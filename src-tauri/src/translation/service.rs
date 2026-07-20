@@ -10,7 +10,14 @@ impl TranslationService {
     pub fn new(config: &crate::config::Config) -> Self {
         let kind = match config.translator.to_lowercase().as_str() {
             "deepl" => TranslatorKind::DeepL(config.deepl_api_key.clone()),
-            "gemini" => TranslatorKind::Gemini(config.gemini_api_key.clone()),
+            "gemini" => TranslatorKind::Gemini {
+                api_key: config.gemini_api_key.clone(),
+                model: if config.gemini_model.is_empty() {
+                    "gemini-3.5-flash".to_string()
+                } else {
+                    config.gemini_model.clone()
+                },
+            },
             _ => TranslatorKind::Google,
         };
         Self {

@@ -24,11 +24,17 @@ pub struct Config {
     pub deepl_api_key: String,
     #[serde(default, skip_serializing_if = "String::is_empty")]
     pub gemini_api_key: String,
+    #[serde(default = "default_gemini_model", skip_serializing_if = "String::is_empty")]
+    pub gemini_model: String,
     pub target_language: String,
     #[serde(default, skip_serializing_if = "String::is_empty")]
     pub hotkey: String,
     #[serde(default)]
     pub channel_filters: ChannelFilters,
+}
+
+fn default_gemini_model() -> String {
+    "gemini-3.5-flash".to_string()
 }
 
 impl Default for Config {
@@ -38,6 +44,7 @@ impl Default for Config {
             translator: "Google".to_string(),
             deepl_api_key: String::new(),
             gemini_api_key: String::new(),
+            gemini_model: default_gemini_model(),
             target_language: "ja".to_string(),
             hotkey: String::new(),
             channel_filters: ChannelFilters::default(),

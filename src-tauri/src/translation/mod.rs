@@ -32,7 +32,7 @@ pub struct TranslationRequest {
 pub enum TranslatorKind {
     Google,
     DeepL(String),
-    Gemini(String),
+    Gemini { api_key: String, model: String },
 }
 
 /// Dispatch a translation request to the appropriate backend.
@@ -40,6 +40,6 @@ pub async fn translate(kind: &TranslatorKind, req: &TranslationRequest) -> Resul
     match kind {
         TranslatorKind::Google => google::translate(&HTTP_CLIENT, req).await,
         TranslatorKind::DeepL(api_key) => deepl::translate(&HTTP_CLIENT, api_key, req).await,
-        TranslatorKind::Gemini(api_key) => gemini::translate(&HTTP_CLIENT, api_key, req).await,
+        TranslatorKind::Gemini { api_key, model } => gemini::translate(&HTTP_CLIENT, api_key, model, req).await,
     }
 }

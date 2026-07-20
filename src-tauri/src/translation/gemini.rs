@@ -87,6 +87,7 @@ struct GeminiResponsePart {
 pub async fn translate(
     client: &reqwest::Client,
     api_key: &str,
+    model: &str,
     req: &TranslationRequest,
 ) -> Result<String, String> {
     let system_prompt = if req.direction == super::Direction::Outbound {
@@ -105,8 +106,8 @@ pub async fn translate(
     };
 
     let url = format!(
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key={}",
-        api_key
+        "https://generativelanguage.googleapis.com/v1beta/models/{}:generateContent?key={}",
+        model, api_key
     );
 
     let body = GeminiRequest {
