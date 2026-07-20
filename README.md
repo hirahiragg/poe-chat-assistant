@@ -10,7 +10,7 @@ Communicate smoothly with players around the world.
 
 ### Chat Log Viewer
 
-Monitors Client.txt in real time and displays chat messages automatically. Filter by channel — Global, Whisper, Party, Guild, and Trade.
+Monitors Client.txt in real time and displays chat messages automatically. Filter by channel: Global, Whisper, Party, Guild, and Trade.
 
 ![Filter](docs/screenshots/filter.png)
 
@@ -22,9 +22,9 @@ Translate incoming messages with one click. Type a reply, translate it, and copy
 
 Three translation engines to choose from:
 
-- **Google Translate** — No API key required, works out of the box
-- **DeepL** — High-quality translation (API key required)
-- **Gemini** — Context-aware translation with PoE terminology (API key required)
+- **Google Translate**: No API key required, works out of the box
+- **DeepL**: High-quality translation (API key required)
+- **Gemini**: Context-aware translation with PoE terminology (API key required)
 
 ### Settings
 
@@ -34,7 +34,7 @@ Settings are auto-saved on change. Select the Client.txt path via a native file 
 
 ### Global Hotkey with PoE Focus Detection
 
-Toggle the window with a configurable hotkey. Like Awakened PoE Trade, the hotkey is only active when PoE (or the assistant itself) is in the foreground — no conflicts with other applications.
+Toggle the window with a configurable hotkey. Like Awakened PoE Trade, the hotkey is only active when PoE (or the assistant itself) is in the foreground: no conflicts with other applications.
 
 ### Resizable Split Pane
 
